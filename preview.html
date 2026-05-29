@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>融宜出行快送 - 原型预览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+        .header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #FF6B35 0%, #F7931E 100%);
+        }
+        .card.admin::before {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        }
+        .card-icon {
+            font-size: 80px;
+            margin-bottom: 25px;
+            display: inline-block;
+        }
+        .card-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .card-desc {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .card-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .card-btn.primary {
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            color: white;
+        }
+        .card-btn.admin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .card-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        .status-badge.ready {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        .status-badge.coming {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+            .card {
+                padding: 30px;
+            }
+            .card-icon {
+                font-size: 60px;
+            }
+            .card-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 融宜出行快送</h1>
+            <p>产品原型预览系统</p>
+        </div>
+        
+        <div class="cards-container">
+            <div class="card" onclick="openDriverApp()">
+                <div class="status-badge ready">✓ 已完成</div>
+                <div class="card-icon">🚗</div>
+                <div class="card-title">司机端</div>
+                <div class="card-desc">专为司机设计的配送管理应用，提供订单管理、实时配送、收入统计等核心功能</div>
+                <a class="card-btn primary" href="index.html">打开司机端</a>
+            </div>
+            
+            <div class="card admin">
+                <div class="status-badge ready">✓ 已完成</div>
+                <div class="card-icon">📊</div>
+                <div class="card-title">管理后台</div>
+                <div class="card-desc">为运营管理团队设计的后台管理系统，提供数据分析、订单监控、司机管理等管理功能</div>
+                <a class="card-btn admin" href="admin.html">打开管理后台</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openDriverApp() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

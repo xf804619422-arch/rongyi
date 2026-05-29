@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>融宜出行快送 - 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; }
+        .admin-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 220px; background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%); color: white; padding: 20px 0; flex-shrink: 0; transition: width 0.3s; }
+        .sidebar-logo { padding: 0 20px; margin-bottom: 25px; font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .sidebar-logo svg { flex-shrink: 0; }
+        .sidebar-menu { list-style: none; }
+        .sidebar-menu li { margin-bottom: 2px; }
+        .sidebar-menu a { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #a0aec0; text-decoration: none; transition: all 0.3s; font-size: 14px; cursor: pointer; border-left: 3px solid transparent; white-space: nowrap; }
+        .sidebar-menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .sidebar-menu a.active { background: rgba(255,107,53,0.2); color: white; border-left: 3px solid #FF6B35; }
+        .sidebar-menu .submenu { background: rgba(255,255,255,0.05); display: none; overflow: hidden; }
+        .sidebar-menu .submenu li a { padding-left: 48px; font-size: 13px; }
+        .sidebar-menu .has-submenu > a::after { content: ''; margin-left: auto; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid #a0aec0; transition: transform 0.3s; }
+        .sidebar-menu .has-submenu.open > a::after { transform: rotate(180deg); }
+        .sidebar-icon { width: 18px; height: 18px; flex-shrink: 0; stroke: currentColor; }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .header-breadcrumb { font-size: 13px; color: #999; }
+        .header-title { font-size: 18px; font-weight: 600; }
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        .header-user { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600; }
+        .page-content { padding: 20px; overflow-y: auto; flex: 1; }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0; }
+        .card-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
+        .stat-card .stat-value { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+        .stat-card .stat-label { font-size: 13px; color: #666; }
+        .stat-card.green .stat-icon { background: #E8F5E9; }
+        .stat-card.blue .stat-icon { background: #E3F2FD; }
+        .stat-card.orange .stat-icon { background: #FFF3E0; }
+        .stat-card.purple .stat-icon { background: #F3E5F5; }
+        .stat-card svg.stat-svg { width: 24px; height: 24px; stroke-width: 2; }
+        .stat-card.green svg.stat-svg { stroke: #07C160; }
+        .stat-card.blue svg.stat-svg { stroke: #1976D2; }
+        .stat-card.orange svg.stat-svg { stroke: #FF6B35; }
+        .stat-card.purple svg.stat-svg { stroke: #7B1FA2; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .stats-grid .stat-card { display: flex; align-items: center; gap: 16px; padding: 24px; }
+        .stats-grid .stat-card .stat-icon { font-size: 40px; width: auto; height: auto; margin-bottom: 0; }
+        .stats-grid .stat-card .stat-content { flex: 1; }
+        .stats-grid .stat-card .stat-value { font-size: 28px; font-weight: 700; color: #333; margin-bottom: 4px; }
+        .stats-grid .stat-card .stat-label { font-size: 13px; color: #666; margin-bottom: 6px; }
+        .stats-grid .stat-card .stat-trend { font-size: 12px; font-weight: 500; }
+        .stats-grid .stat-card .stat-trend.up { color: #07C160; }
+        .stats-grid .stat-card .stat-trend.down { color: #FF4D4F; }
+        .stats-grid .stat-card.main { background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); color: white; }
+        .stats-grid .stat-card.main .stat-value, .stats-grid .stat-card.main .stat-label { color: white; }
+        .stats-grid .stat-card.main .stat-trend.up { color: rgba(255,255,255,0.9); }
+        .stats-grid .stat-card.blue { background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); }
+        .stats-grid .stat-card.blue .stat-icon-wrap { background: rgba(255,255,255,0.8); }
+        .stats-grid .stat-card.blue .stat-icon-wrap svg { color: #1976D2; }
+        .stats-grid .stat-card.orange { background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%); }
+        .stats-grid .stat-card.orange .stat-icon-wrap { background: rgba(255,255,255,0.8); }
+        .stats-grid .stat-card.orange .stat-icon-wrap svg { color: #FF6B35; }
+        .stats-grid .stat-card.purple { background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%); }
+        .stats-grid .stat-card.purple .stat-icon-wrap { background: rgba(255,255,255,0.8); }
+        .stats-grid .stat-card.purple .stat-icon-wrap svg { color: #7B1FA2; }
+        .stats-grid .stat-icon-wrap { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .stats-grid .stat-icon-wrap svg { width: 24px; height: 24px; }
+        .stats-grid .stat-card.main .stat-icon-wrap { background: rgba(255,255,255,0.2); }
+        .stats-grid .stat-card.main .stat-icon-wrap svg { color: white; }
+        .date-tabs { display: flex; gap: 8px; background: white; padding: 4px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .date-tab { padding: 8px 20px; border: none; background: transparent; border-radius: 8px; font-size: 13px; font-weight: 500; color: #666; cursor: pointer; transition: all 0.3s; }
+        .date-tab:hover { background: #f5f5f5; }
+        .date-tab.active { background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); color: white; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        th { background: #f8f9fa; font-weight: 600; font-size: 13px; color: #666; white-space: nowrap; }
+        td { font-size: 14px; }
+        tr:hover { background: #f8f9fa; }
+        .btn { display: inline-flex; align-items: center; gap: 5px; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: all 0.3s; white-space: nowrap; }
+        .btn svg.btn-icon { width: 14px; height: 14px; stroke-width: 2; }
+        .btn-primary { background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(255,107,53,0.3); }
+        .btn-secondary { background: #f0f0f0; color: #666; }
+        .btn-secondary:hover { background: #e0e0e0; }
+        .btn-success { background: #07C160; color: white; }
+        .btn-danger { background: #FF4D4F; color: white; }
+        .btn-outline { background: white; border: 1px solid #ddd; color: #666; }
+        .btn-outline:hover { border-color: #FF6B35; color: #FF6B35; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+        .badge.online { background: #E8F5E9; color: #07C160; }
+        .badge.offline { background: #F5F5F5; color: #999; }
+        .badge.pending { background: #FFF3E0; color: #FA8C16; }
+        .badge.approved { background: #E8F5E9; color: #07C160; }
+        .badge.rejected { background: #FFF1F0; color: #FF4D4F; }
+        .badge.delivering { background: #E3F2FD; color: #1976D2; }
+        .badge.completed { background: #E8F5E9; color: #2E7D32; }
+        .reward-steps-list { display: flex; flex-direction: column; gap: 6px; }
+        .reward-step-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: #f8f9fa; border-radius: 6px; font-size: 13px; }
+        .reward-step-row .reward-step-amount { color: #FF6B35; font-weight: 600; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        .form-control { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.3s; }
+        .form-control:focus { outline: none; border-color: #FF6B35; }
+        .search-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-bar input, .search-bar select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .tab-group { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-group .btn { padding: 6px 16px; font-size: 13px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .modal-header { padding: 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 18px; font-weight: 600; }
+        .modal-close { cursor: pointer; font-size: 22px; color: #999; background: none; border: none; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 10px; }
+        .ranking-list { list-style: none; }
+        .ranking-item { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #f0f0f0; gap: 12px; }
+        .ranking-item.top-1 { background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%); }
+        .ranking-item.top-2 { background: linear-gradient(135deg, #F5F5F5 0%, #EEEEEE 100%); }
+        .ranking-item.top-3 { background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%); }
+        .rank-badge { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+        .rank-badge.gold { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: white; }
+        .rank-badge.silver { background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%); color: white; }
+        .rank-badge.bronze { background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%); color: white; }
+        .rank-badge.default { background: #f0f0f0; color: #666; }
+        .chart-placeholder { height: 220px; background: #fafafa; border: 1px dashed #e0e0e0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; font-size: 14px; gap: 8px; }
+        .map-placeholder { height: 400px; background: linear-gradient(180deg, #E3F2FD 0%, #BBDEFB 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 16px; position: relative; }
+        .map-driver { position: absolute; width: 40px; height: 40px; background: #07C160; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600; box-shadow: 0 2px 10px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; }
+        .map-driver:hover { transform: scale(1.15); }
+        .map-order { position: absolute; width: 36px; height: 36px; background: #FF6B35; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .highlight-card { border: 1px solid #FFE082; background: linear-gradient(135deg, #FFFDE7 0%, #FFF8E1 100%); }
+        .highlight-card .card-header { border-bottom-color: #FFE082; }
+        .invoice-card { border: 1px solid #FF6B35; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+        .driver-list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0; }
+        .toggle-switch { display: flex; align-items: center; gap: 10px; }
+        .toggle-switch input[type="checkbox"] { display: none; }
+        .toggle-label { width: 44px; height: 24px; background: #ccc; border-radius: 12px; cursor: pointer; position: relative; transition: background 0.3s; }
+        .toggle-label::after { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: white; top: 2px; left: 2px; transition: transform 0.3s; }
+        .toggle-switch input:checked + .toggle-label { background: #FF6B35; }
+        .toggle-switch input:checked + .toggle-label::after { transform: translateX(20px); }
+        .form-hint { font-size: 12px; color: #999; margin-top: 8px; line-height: 1.5; }
+        .form-row { display: flex; gap: 16px; flex-wrap: wrap; }
+        .tier-input { width: 100%; padding: 6px 8px; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 13px; text-align: center; }
+        .tier-input:focus { outline: none; border-color: #FF6B35; }
+        .btn-sm { padding: 4px 12px; font-size: 12px; border-radius: 6px; }
+        .btn-xs { padding: 3px 10px; font-size: 12px; border-radius: 4px; }
+        .btn-lg { padding: 12px 24px; font-size: 15px; }
+        .info-box { background: #FAFAFA; border: 1px solid #E8E8E8; border-radius: 8px; padding: 16px; }
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar-logo span, .sidebar-menu a span { display: none; }
+            .sidebar-menu a { justify-content: center; padding: 10px; }
+            .sidebar-menu .has-submenu > a::after { display: none; }
+            .sidebar-menu .submenu { display: none !important; }
+            .sidebar-menu li.has-submenu.open .submenu { display: none !important; }
+            .sidebar-logo { justify-content: center; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                <span>融宜出行快送</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#dashboard" class="active" onclick="showPage('dashboard', this, event)"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>控制台</span></a></li>
+                <li class="has-submenu"><a onclick="toggleSubmenu(this, event)"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg><span>用户管理</span></a>
+                    <ul class="submenu"><li><a onclick="showPage('driver-list', this, event)">司机列表</a></li></ul>
+                </li>
+                <li class="has-submenu"><a onclick="toggleSubmenu(this, event)"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>财务管理</span></a>
+                    <ul class="submenu"><li><a onclick="showPage('withdraw-audit', this, event)">提现审核</a></li><li><a onclick="showPage('withdraw-history', this, event)">提现记录</a></li><li><a onclick="showPage('income-detail', this, event)">平台收入</a></li></ul>
+                </li>
+                <li class="has-submenu"><a onclick="toggleSubmenu(this, event)"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg><span>配送订单</span></a>
+                    <ul class="submenu"><li><a onclick="showPage('order-list', this, event)">订单列表</a></li><li><a onclick="showPage('cancel-review', this, event)">取消审核</a></li><li><a onclick="showPage('driver-dispatch', this, event)">司机调度</a></li></ul>
+                </li>
+                <li class="has-submenu"><a onclick="toggleSubmenu(this, event)"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>认证中心</span></a>
+                    <ul class="submenu"><li><a onclick="showPage('driver-cert', this, event)">司机认证</a></li><li><a onclick="showPage('vehicle-bind', this, event)">车辆绑定</a></li></ul>
+                </li>
+                <li class="has-submenu"><a onclick="toggleSubmenu(this, event)"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>活动中心</span></a>
+                    <ul class="submenu"><li><a onclick="showPage('activity-manage', this, event)">活动管理</a></li></ul>
+                </li>
+                <li class="has-submenu"><a onclick="toggleSubmenu(this, event)"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>系统配置</span></a>
+                    <ul class="submenu"><li><a onclick="showPage('service-fee', this, event)">服务费配置</a></li><li><a onclick="showPage('withdraw-config', this, event)">提现配置</a></li><li><a onclick="showPage('map-config', this, event)">地图配置</a></li><li><a onclick="showPage('push-config', this, event)">消息推送</a></li><li><a onclick="showPage('pricing-config', this, event)">计价配置</a></li><li><a onclick="showPage('eta-config', this, event)">时效配置</a></li></ul>
+                </li>
+                <li class="has-submenu"><a onclick="toggleSubmenu(this, event)"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>系统管理</span></a>
+                    <ul class="submenu"><li><a onclick="showPage('admin-list', this, event)">管理员列表</a></li><li><a onclick="showPage('role-manage', this, event)">角色管理</a></li><li><a onclick="showPage('menu-manage', this, event)">菜单管理</a></li></ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="header-title" id="page-title">控制台</div>
+                </div>
+                <div class="header-right">
+                    <div class="header-user">
+                        <span>管理员</span>
+                        <div class="user-avatar">管</div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <!-- ========== 控制台 ========== -->
+                <div id="dashboard" class="page active">
+                    <div class="stats-grid">
+                        <div class="stat-card green"><div class="stat-icon"><svg class="stat-svg" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="stat-value">236</div><div class="stat-label">司机总数</div><div style="font-size:12px;color:#999;margin-top:4px;">在线 189 | 离线 47</div></div>
+                        <div class="stat-card blue"><div class="stat-icon"><svg class="stat-svg" viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div><div class="stat-value">3,842</div><div class="stat-label">今日接单</div><div style="font-size:12px;color:#07C160;margin-top:4px;">较昨日 +12.5%</div></div>
+                        <div class="stat-card orange"><div class="stat-icon"><svg class="stat-svg" viewBox="0 0 24 24" fill="none"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="stat-value">¥186,520</div><div class="stat-label">今日收入</div><div style="font-size:12px;color:#07C160;margin-top:4px;">较昨日 +8.3%</div></div>
+                        <div class="stat-card purple"><div class="stat-icon"><svg class="stat-svg" viewBox="0 0 24 24" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="stat-value">38</div><div class="stat-label">活跃司机</div><div style="font-size:12px;color:#999;margin-top:4px;">较昨日 +5</div></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">订单统计</div><select class="form-control" style="width:auto;padding:6px 12px;font-size:13px;"><option>今日</option><option>本周</option><option>本月</option></select></div>
+                            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+                                <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;"><div style="font-size:22px;font-weight:700;color:#07C160;">3,247</div><div style="font-size:12px;color:#666;">已完成</div></div>
+                                <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;"><div style="font-size:22px;font-weight:700;color:#FF4D4F;">36</div><div style="font-size:12px;color:#666;">超时订单</div></div>
+                                <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;"><div style="font-size:22px;font-weight:700;color:#FA8C16;">89</div><div style="font-size:12px;color:#666;">取消订单</div></div>
+                                <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;"><div style="font-size:22px;font-weight:700;color:#1976D2;">260</div><div style="font-size:12px;color:#666;">配送中</div></div>
+                            </div>
+                            <div class="chart-placeholder"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>订单趋势图表</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">司机排行榜</div><div style="display:flex;gap:8px;"><button class="btn btn-outline" style="padding:6px 12px;font-size:13px;">收入榜</button><button class="btn btn-primary" style="padding:6px 12px;font-size:13px;">接单榜</button></div></div>
+                            <ul class="ranking-list">
+                                <li class="ranking-item top-1"><span class="rank-badge gold">1</span><div style="flex:1;"><div style="font-weight:600;">张师傅</div><div style="font-size:12px;color:#666;">138****8888</div></div><div style="text-align:right;"><div style="font-weight:600;color:#FF6B35;">128单</div><div style="font-size:12px;color:#666;">今日</div></div></li>
+                                <li class="ranking-item top-2"><span class="rank-badge silver">2</span><div style="flex:1;"><div style="font-weight:600;">李师傅</div><div style="font-size:12px;color:#666;">139****6666</div></div><div style="text-align:right;"><div style="font-weight:600;color:#FF6B35;">115单</div></div></li>
+                                <li class="ranking-item top-3"><span class="rank-badge bronze">3</span><div style="flex:1;"><div style="font-weight:600;">王师傅</div><div style="font-size:12px;color:#666;">137****5555</div></div><div style="text-align:right;"><div style="font-weight:600;color:#FF6B35;">98单</div></div></li>
+                                <li class="ranking-item"><span class="rank-badge default">4</span><div style="flex:1;"><div style="font-weight:600;">赵师傅</div><div style="font-size:12px;color:#666;">136****4444</div></div><div style="text-align:right;"><div style="font-weight:600;color:#FF6B35;">86单</div></div></li>
+                                <li class="ranking-item"><span class="rank-badge default">5</span><div style="flex:1;"><div style="font-weight:600;">刘师傅</div><div style="font-size:12px;color:#666;">135****3333</div></div><div style="text-align:right;"><div style="font-weight:600;color:#FF6B35;">78单</div></div></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">营业统计</div></div>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+                            <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#FFF8E1 0%,#FFECB3 100%);border-radius:12px;"><div style="font-size:14px;color:#666;">总收入</div><div style="font-size:32px;font-weight:700;color:#FF6B35;">¥286,520</div><div style="font-size:12px;color:#07C160;margin-top:4px;">↑ 15.3%</div></div>
+                            <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#E8F5E9 0%,#C8E6C9 100%);border-radius:12px;"><div style="font-size:14px;color:#666;">司机收入</div><div style="font-size:32px;font-weight:700;color:#07C160;">¥238,520</div><div style="font-size:12px;color:#07C160;margin-top:4px;">↑ 14.8%</div></div>
+                            <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#E3F2FD 0%,#BBDEFB 100%);border-radius:12px;"><div style="font-size:14px;color:#666;">平台收入</div><div style="font-size:32px;font-weight:700;color:#1976D2;">¥48,000</div><div style="font-size:12px;color:#07C160;margin-top:4px;">↑ 18.2%</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== 司机列表 ========== -->
+                <div id="driver-list" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">司机列表</div><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="showAddDriverModal()"><svg class="btn-icon" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 添加司机</button><button class="btn btn-secondary">批量导入</button><button class="btn btn-secondary">导出</button></div></div>
+                        <div class="search-bar"><input type="text" placeholder="搜索手机号/姓名"><select><option>全部状态</option><option>在线</option><option>离线</option></select><select><option>全部认证状态</option><option>已认证</option><option>待审核</option><option>未认证</option></select><button class="btn btn-primary">搜索</button></div>
+                        <div class="table-wrapper"><table>
+                            <thead><tr><th>姓名</th><th>手机号</th><th>在线状态</th><th>认证状态</th><th>车辆绑定</th><th>今日接单</th><th>累计收入</th><th>操作</th></tr></thead>
+                            <tbody>
+                                <tr><td>张司机</td><td>138****8888</td><td><span class="badge online">在线</span></td><td><span class="badge approved">已认证</span></td><td><span class="badge approved">已绑定</span></td><td>28</td><td>¥12,580</td><td><button class="btn btn-outline btn-xs" onclick="showDriverDetail('张司机','138****8888','张伟','110101199001011234','京A********123','7年','已认证','京A88888','比亚迪 汉 EV','2022款','已绑定','2024-01-10','2024-01-15 10:30')">详情</button><button class="btn btn-outline btn-xs" onclick="showDriverEdit('张司机','138****8888','张伟','110101199001011234','京A********123','京A88888','比亚迪 汉 EV','2022款')">编辑</button><button class="btn btn-outline btn-xs" style="color:#1976D2;border-color:#1976D2;" onclick="showCertifyDriver('张司机','138****8888')">认证</button><button class="btn btn-outline btn-xs" style="color:#7B1FA2;border-color:#7B1FA2;" onclick="showBindVehicle('张司机','138****8888')">车辆绑定</button></td></tr>
+                                <tr><td>李司机</td><td>139****6666</td><td><span class="badge online">在线</span></td><td><span class="badge approved">已认证</span></td><td><span class="badge approved">已绑定</span></td><td>25</td><td>¥10,320</td><td><button class="btn btn-outline btn-xs" onclick="showDriverDetail('李司机','139****6666','李明','320105199208154321','京B********456','5年','已认证','京B66666','特斯拉 Model 3','2023款','已绑定','2024-01-08','2024-01-15 13:20')">详情</button><button class="btn btn-outline btn-xs" onclick="showDriverEdit('李司机','139****6666','李明','320105199208154321','京B********456','京B66666','特斯拉 Model 3','2023款')">编辑</button><button class="btn btn-outline btn-xs" style="color:#1976D2;border-color:#1976D2;" onclick="showCertifyDriver('李司机','139****6666')">认证</button><button class="btn btn-outline btn-xs" style="color:#7B1FA2;border-color:#7B1FA2;" onclick="showBindVehicle('李司机','139****6666')">车辆绑定</button></td></tr>
+                                <tr><td>王司机</td><td>137****5555</td><td><span class="badge offline">离线</span></td><td><span class="badge pending">待审核</span></td><td><span class="badge pending">待绑定</span></td><td>0</td><td>¥0</td><td><button class="btn btn-outline btn-xs" onclick="showDriverDetail('王司机','137****5555','王强','440106199501017890','京C********789','3年','待审核','暂无','暂无','暂无','待绑定','2024-01-14','2024-01-15 14:30')">详情</button><button class="btn btn-outline btn-xs" onclick="showDriverEdit('王司机','137****5555','王强','440106199501017890','京C********789','暂无','暂无','暂无')">编辑</button><button class="btn btn-outline btn-xs" style="color:#1976D2;border-color:#1976D2;" onclick="showCertifyDriver('王司机','137****5555')">认证</button><button class="btn btn-outline btn-xs" style="color:#7B1FA2;border-color:#7B1FA2;" onclick="showBindVehicle('王司机','137****5555')">车辆绑定</button></td></tr>
+                            </tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- ========== 提现审核 ========== -->
+                <div id="withdraw-audit" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">提现审核</div>
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <input type="text" class="form-control" placeholder="搜索提现单号/司机姓名/手机号" style="width:220px;padding:6px 12px;font-size:13px;" oninput="filterWithdrawAudit(this.value)">
+                                <select class="form-control" style="width:auto;padding:6px 12px;font-size:13px;" onchange="filterWithdrawAuditStatus(this.value)">
+                                    <option value="all">全部状态</option>
+                                    <option value="pending">待审核</option>
+                                    <option value="approved">已通过</option>
+                                    <option value="rejected">已拒绝</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrapper"><table id="withdraw-audit-table">
+                            <thead><tr><th>提现单号</th><th>司机姓名</th><th>手机号</th><th>提现金额</th><th>提现方式</th><th>银行卡号</th><th>开户行</th><th>申请时间</th><th>状态</th><th>操作</th></tr></thead>
+                            <tbody>
+                                <tr data-search="WD20240115001 张司机 138****8888" data-status="pending"><td>WD20240115001</td><td>张司机</td><td>138****8888</td><td style="color:#FF6B35;font-weight:600;">¥1,000</td><td>银行卡</td><td>****3288</td><td>中国工商银行</td><td>2024-01-15 14:30</td><td><span class="badge pending">待审核</span></td><td><button class="btn btn-outline btn-xs" onclick="showWithdrawDetail('WD20240115001','2024-01-15 14:30:00','张司机','138****8888','¥1,000.00','银行卡','中国工商银行','**** **** **** 3288','张伟','北京市朝阳区支行','¥3,680.00')">查看详情</button></td></tr>
+                                <tr data-search="WD20240115002 李司机 139****6666" data-status="pending"><td>WD20240115002</td><td>李司机</td><td>139****6666</td><td style="color:#FF6B35;font-weight:600;">¥2,000</td><td>银行卡</td><td>****6632</td><td>中国建设银行</td><td>2024-01-15 13:20</td><td><span class="badge pending">待审核</span></td><td><button class="btn btn-outline btn-xs" onclick="showWithdrawDetail('WD20240115002','2024-01-15 13:20:00','李司机','139****6666','¥2,000.00','银行卡','中国建设银行','**** **** **** 6632','李明','北京市海淀区支行','¥5,320.00')">查看详情</button></td></tr>
+                            </tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- ========== 提现记录 ========== -->
+                <div id="withdraw-history" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">提现记录</div>
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <input type="text" class="form-control" placeholder="搜索提现单号/司机姓名" style="width:220px;padding:6px 12px;font-size:13px;" oninput="filterWithdrawHistory(this.value)">
+                                <select class="form-control" style="width:auto;padding:6px 12px;font-size:13px;" onchange="filterWithdrawHistoryStatus(this.value)">
+                                    <option value="all">全部状态</option>
+                                    <option value="completed">已完成</option>
+                                    <option value="failed">失败</option>
+                                    <option value="processing">处理中</option>
+                                </select>
+                                <button class="btn btn-secondary">导出记录</button>
+                            </div>
+                        </div>
+                        <div class="table-wrapper"><table id="withdraw-history-table">
+                            <thead><tr><th>订单号</th><th>司机姓名</th><th>提现金额</th><th>手续费</th><th>实际到账</th><th>提现方式</th><th>状态</th></tr></thead>
+                            <tbody>
+                                <tr data-search="WD20240114001 张司机" data-status="completed"><td>WD20240114001</td><td>张司机</td><td>¥1,000</td><td>¥0</td><td>¥1,000</td><td>微信</td><td><span class="badge approved">已完成</span></td></tr>
+                                <tr data-search="WD20240114002 李司机" data-status="completed"><td>WD20240114002</td><td>李司机</td><td>¥2,500</td><td>¥5</td><td>¥2,495</td><td>银行卡</td><td><span class="badge approved">已完成</span></td></tr>
+                            </tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- ========== 平台收入 ========== -->
+                <div id="income-detail" class="page" style="display:none;">
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                        <div class="date-tabs">
+                            <button class="date-tab active" onclick="switchIncomeDate('today', this)">今日</button>
+                            <button class="date-tab" onclick="switchIncomeDate('week', this)">本周</button>
+                            <button class="date-tab" onclick="switchIncomeDate('month', this)">本月</button>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card main">
+                            <div class="stat-icon-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">总收入</div>
+                                <div class="stat-value">¥8,520.00</div>
+                                <div class="stat-trend up">↑12%</div>
+                            </div>
+                        </div>
+                        <div class="stat-card blue">
+                            <div class="stat-icon-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="1" x2="12" y2="23"/>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">服务费抽成</div>
+                                <div class="stat-value">¥5,320.00</div>
+                                <div class="stat-trend up">↑8%</div>
+                            </div>
+                        </div>
+                        <div class="stat-card orange">
+                            <div class="stat-icon-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">小费抽成</div>
+                                <div class="stat-value">¥1,200.00</div>
+                                <div class="stat-trend up">↑15%</div>
+                            </div>
+                        </div>
+                        <div class="stat-card purple">
+                            <div class="stat-icon-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">保价费抽成</div>
+                                <div class="stat-value">¥2,000.00</div>
+                                <div class="stat-trend up">↑10%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">平台收入</div>
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <div class="search-bar" style="margin:0;padding:0;background:none;border:none;display:flex;gap:10px;align-items:center;">
+                                    <input type="text" class="form-control" placeholder="搜索订单号" style="width:180px;padding:6px 12px;font-size:13px;" oninput="filterIncomeOrders(this.value)">
+                                    <select class="form-control" style="width:auto;padding:6px 12px;font-size:13px;" onchange="filterIncomeType(this.value)">
+                                        <option value="all">全部类型</option>
+                                        <option value="配送费">服务费抽成</option>
+                                        <option value="小费">小费抽成</option>
+                                        <option value="保价费">保价费抽成</option>
+                                    </select>
+                                    <select class="form-control" style="width:auto;padding:6px 12px;font-size:13px;" onchange="filterIncomeDate(this.value)">
+                                        <option value="all">全部日期</option>
+                                        <option value="today">今日</option>
+                                        <option value="yesterday">昨日</option>
+                                        <option value="week">本周</option>
+                                        <option value="month">本月</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-secondary" onclick="exportIncome()">📥 导出</button>
+                            </div>
+                        </div>
+                        <div class="table-wrapper"><table id="income-table">
+                            <thead><tr><th>订单号</th><th>收入类型</th><th>订单金额</th><th>抽成比例</th><th>平台收入</th><th>司机姓名</th><th>订单时间</th></tr></thead>
+                            <tbody>
+                                <tr data-search="DEL20240115001" data-type="配送费" data-date="today"><td>DEL20240115001</td><td><span class="badge approved">服务费抽成</span></td><td>¥35.50</td><td>15%</td><td><span style="color:#FF6B35;font-weight:600;">¥5.33</span></td><td>张司机</td><td>2024-01-15 10:30</td></tr>
+                                <tr data-search="DEL20240115002" data-type="小费" data-date="today"><td>DEL20240115002</td><td><span class="badge" style="background:#FFF7E6;color:#FA8C16;">小费抽成</span></td><td>¥10.00</td><td>5%</td><td><span style="color:#FF6B35;font-weight:600;">¥0.50</span></td><td>张司机</td><td>2024-01-15 10:30</td></tr>
+                                <tr data-search="DEL20240115003" data-type="保价费" data-date="today"><td>DEL20240115003</td><td><span class="badge" style="background:#F3E8FF;color:#7B1FA2;">保价费抽成</span></td><td>¥5.00</td><td>10%</td><td><span style="color:#FF6B35;font-weight:600;">¥0.50</span></td><td>张司机</td><td>2024-01-15 10:30</td></tr>
+                                <tr data-search="DEL20240115011" data-type="配送费" data-date="today"><td>DEL20240115011</td><td><span class="badge approved">服务费抽成</span></td><td>¥45.00</td><td>15%</td><td><span style="color:#FF6B35;font-weight:600;">¥6.75</span></td><td>李司机</td><td>2024-01-15 12:45</td></tr>
+                                <tr data-search="DEL20240115012" data-type="小费" data-date="today"><td>DEL20240115012</td><td><span class="badge" style="background:#FFF7E6;color:#FA8C16;">小费抽成</span></td><td>¥20.00</td><td>5%</td><td><span style="color:#FF6B35;font-weight:600;">¥1.00</span></td><td>李司机</td><td>2024-01-15 12:45</td></tr>
+                                <tr data-search="DEL20240114005" data-type="配送费" data-date="yesterday"><td>DEL20240114005</td><td><span class="badge approved">服务费抽成</span></td><td>¥38.00</td><td>15%</td><td><span style="color:#FF6B35;font-weight:600;">¥5.70</span></td><td>张司机</td><td>2024-01-14 16:20</td></tr>
+                                <tr data-search="DEL20240114006" data-type="保价费" data-date="yesterday"><td>DEL20240114006</td><td><span class="badge" style="background:#F3E8FF;color:#7B1FA2;">保价费抽成</span></td><td>¥8.00</td><td>10%</td><td><span style="color:#FF6B35;font-weight:600;">¥0.80</span></td><td>李司机</td><td>2024-01-14 15:10</td></tr>
+                                <tr data-search="DEL20240113003" data-type="小费" data-date="week"><td>DEL20240113003</td><td><span class="badge" style="background:#FFF7E6;color:#FA8C16;">小费抽成</span></td><td>¥15.00</td><td>5%</td><td><span style="color:#FF6B35;font-weight:600;">¥0.75</span></td><td>张司机</td><td>2024-01-13 09:30</td></tr>
+                            </tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- ========== 订单列表 ========== -->
+                <div id="order-list" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">订单列表</div><div style="display:flex;gap:10px;"><button class="btn btn-primary">创建订单</button><button class="btn btn-secondary">批量导出</button></div></div>
+                        <div class="tab-group"><button class="btn btn-primary" onclick="filterOrderStatus('all')">全部</button><button class="btn btn-outline" onclick="filterOrderStatus('pending')">待接单</button><button class="btn btn-outline" onclick="filterOrderStatus('pickup')">待取货</button><button class="btn btn-outline" onclick="filterOrderStatus('delivering')">配送中</button><button class="btn btn-outline" onclick="filterOrderStatus('completed')">已完成</button><button class="btn btn-outline" onclick="filterOrderStatus('cancelled')">已取消</button></div>
+                        <div class="search-bar">
+                            <input type="text" placeholder="搜索订单号" oninput="filterOrderKeyword(this.value)">
+                            <select onchange="filterOrderType(this.value)">
+                                <option value="all">全部类型</option>
+                                <option value="即时配送">即时配送</option>
+                                <option value="预约配送">预约配送</option>
+                                <option value="同城速递">同城速递</option>
+                            </select>
+                            <select onchange="filterDeliveryStatus(this.value)">
+                                <option value="all">全部配送状态</option>
+                                <option value="normal">正常</option>
+                                <option value="abnormal">异常</option>
+                                <option value="timeout">超时</option>
+                            </select>
+                            <button class="btn btn-primary">搜索</button>
+                        </div>
+                        <div class="table-wrapper"><table id="order-list-table">
+                            <thead><tr><th>订单号</th><th>订单类型</th><th>取货地址</th><th>送达地址</th><th>配送费</th><th>状态</th><th>配送状态</th><th>操作</th></tr></thead>
+                            <tbody>
+                                <tr data-status="delivering" data-type="即时配送" data-delivery="normal"><td>DEL20240115001</td><td>即时配送</td><td>朝阳区建国路88号</td><td>海淀区中关村大街1号</td><td>¥35</td><td><span class="badge delivering">配送中</span></td><td><span class="badge approved">正常</span></td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;" onclick="showOrderDetail('DEL20240115001')">详情</button></td></tr>
+                                <tr data-status="pending" data-type="预约配送" data-delivery=""><td>DEL20240115002</td><td>预约配送</td><td>西城区金融街10号</td><td>东城区王府井大街</td><td>¥45</td><td><span class="badge pending">待接单</span></td><td>-</td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;" onclick="showOrderDetail('DEL20240115002')">详情</button><button class="btn btn-primary" style="padding:4px 10px;font-size:12px;">调度</button></td></tr>
+                                <tr data-status="delivering" data-type="即时配送" data-delivery="abnormal"><td>DEL20240115003</td><td>即时配送</td><td>海淀区中关村大街8号</td><td>朝阳区望京SOHO</td><td>¥42</td><td><span class="badge delivering">配送中</span></td><td><span class="badge pending">异常</span></td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;" onclick="showOrderDetail('DEL20240115003')">详情</button></td></tr>
+                                <tr data-status="delivering" data-type="即时配送" data-delivery="timeout"><td>DEL20240115004</td><td>即时配送</td><td>丰台区科技园路1号</td><td>丰台区汉威国际广场</td><td>¥38</td><td><span class="badge delivering">配送中</span></td><td><span class="badge rejected">超时</span></td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;" onclick="showOrderDetail('DEL20240115004')">详情</button></td></tr>
+                            </tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- ========== 取消审核 ========== -->
+                <div id="cancel-review" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">取消审核</div>
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <input type="text" class="form-control" placeholder="搜索订单号/司机姓名" style="width:220px;padding:6px 12px;font-size:13px;" oninput="filterCancelReview(this.value)">
+                                <select class="form-control" style="width:auto;padding:6px 12px;font-size:13px;" onchange="filterCancelReviewStatus(this.value)">
+                                    <option value="all">全部状态</option>
+                                    <option value="pending">待审核</option>
+                                    <option value="approved">已通过</option>
+                                    <option value="rejected">已拒绝</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrapper"><table id="cancel-review-table">
+                            <thead><tr><th>订单号</th><th>司机姓名</th><th>手机号</th><th>申请时间</th><th>状态</th><th>操作</th></tr></thead>
+                            <tbody>
+                                <tr data-search="DEL20240115005 张司机" data-status="pending"><td>DEL20240115005</td><td>张司机</td><td>138****8888</td><td>2024-01-15 15:30</td><td><span class="badge pending">待审核</span></td><td><button class="btn btn-outline btn-xs" onclick="showCancelDetail('DEL20240115005')">查看详情</button></td></tr>
+                                <tr data-search="DEL20240115006 李司机" data-status="pending"><td>DEL20240115006</td><td>李司机</td><td>139****6666</td><td>2024-01-15 14:45</td><td><span class="badge pending">待审核</span></td><td><button class="btn btn-outline btn-xs" onclick="showCancelDetail('DEL20240115006')">查看详情</button></td></tr>
+                            </tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- ========== 司机调度 ========== -->
+                <div id="driver-dispatch" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">司机调度</div><select class="form-control" style="width:auto;padding:6px 12px;font-size:13px;"><option>待接单订单</option></select></div>
+                        <div class="map-placeholder"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg> 地图调度界面<div class="map-order" style="top:20%;left:30%;">DEL001</div><div class="map-order" style="top:55%;left:60%;">DEL002</div><div class="map-driver" style="top:22%;left:25%;">张</div><div class="map-driver" style="top:28%;left:38%;">李</div><div class="map-driver" style="top:50%;left:55%;">王</div></div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;">
+                            <div class="card"><div class="card-header"><div class="card-title">待调度订单</div></div><div class="invoice-card"><div style="font-weight:600;">订单号: DEL20240115002</div><div style="font-size:13px;color:#666;">取货: 西城区金融街10号</div><div style="font-size:13px;color:#FF6B35;">配送费: ¥45</div></div></div>
+                            <div class="card"><div class="card-header"><div class="card-title">附近司机</div></div>
+                            <div class="driver-list-item"><div><div style="font-weight:600;">张司机</div><div style="font-size:12px;color:#666;">距取货点 1.2km</div></div><button class="btn btn-primary" style="padding:6px 12px;font-size:12px;">派单</button></div>
+                            <div class="driver-list-item"><div><div style="font-weight:600;">李司机</div><div style="font-size:12px;color:#666;">距取货点 2.5km</div></div><button class="btn btn-primary" style="padding:6px 12px;font-size:12px;">派单</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== 司机认证 ========== -->
+                <div id="driver-cert" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">司机认证审核</div>
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <input type="text" class="form-control" placeholder="搜索司机姓名/手机号" style="width:200px;padding:6px 12px;font-size:13px;" oninput="filterCertTable(this.value)">
+                                <select class="form-control" style="width:auto;padding:6px 12px;font-size:13px;" onchange="filterCertStatus(this.value)">
+                                    <option value="all">全部状态</option>
+                                    <option value="待审核">待审核</option>
+                                    <option value="已通过">已通过</option>
+                                    <option value="已拒绝">已拒绝</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrapper"><table id="cert-table">
+                            <thead><tr><th>司机姓名</th><th>手机号</th><th>身份证号</th><th>驾驶证号</th><th>申请时间</th><th>状态</th><th>操作</th></tr></thead>
+                            <tbody>
+                                <tr data-search="王司机 1375555" data-status="待审核"><td>王司机</td><td>137****5555</td><td>110101********1234</td><td>京A***********123</td><td>2024-01-15 10:30:00</td><td><span class="badge pending">待审核</span></td><td><button class="btn btn-outline btn-xs" onclick="showCertDetail('王司机','137****5555','110101********1234','京A***********123','2024-01-15 10:30:00')">查看详情</button></td></tr>
+                                <tr data-search="赵司机 1363333" data-status="已通过"><td>赵司机</td><td>136****3333</td><td>320106********5678</td><td>京B***********789</td><td>2024-01-14 08:20:00</td><td><span class="badge approved">已通过</span></td><td><button class="btn btn-outline btn-xs" onclick="showCertDetail('赵司机','136****3333','320106********5678','京B***********789','2024-01-14 08:20:00')">查看详情</button></td></tr>
+                                <tr data-search="周司机 1354444" data-status="已拒绝"><td>周司机</td><td>135****4444</td><td>440106********9012</td><td>京C***********456</td><td>2024-01-13 15:45:00</td><td><span class="badge rejected">已拒绝</span></td><td><button class="btn btn-outline btn-xs" onclick="showCertDetail('周司机','135****4444','440106********9012','京C***********456','2024-01-13 15:45:00')">查看详情</button></td></tr>
+                            </tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- ========== 车辆绑定 ========== -->
+                <div id="vehicle-bind" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">车辆绑定审核</div>
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <input type="text" class="form-control" placeholder="搜索司机姓名/手机号" style="width:200px;padding:6px 12px;font-size:13px;" oninput="filterVehicleTable(this.value)">
+                                <select class="form-control" style="width:auto;padding:6px 12px;font-size:13px;" onchange="filterVehicleStatus(this.value)">
+                                    <option value="all">全部状态</option>
+                                    <option value="待审核">待审核</option>
+                                    <option value="已通过">已通过</option>
+                                    <option value="已拒绝">已拒绝</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrapper"><table id="vehicle-table">
+                            <thead><tr><th>司机姓名</th><th>手机号</th><th>车牌号</th><th>车辆品牌</th><th>申请时间</th><th>状态</th><th>操作</th></tr></thead>
+                            <tbody>
+                                <tr data-search="孙司机 1342222" data-status="待审核"><td>孙司机</td><td>134****2222</td><td>京C12345</td><td>比亚迪 汉 EV</td><td>2024-01-15 11:20:00</td><td><span class="badge pending">待审核</span></td><td><button class="btn btn-outline btn-xs" onclick="showVehicleDetail('孙司机','134****2222','京C12345','比亚迪 汉 EV','2023款','轿车','2024-01-15 11:20:00')">查看详情</button></td></tr>
+                                <tr data-search="吴司机 1331111" data-status="已通过"><td>吴司机</td><td>133****1111</td><td>京B88888</td><td>特斯拉 Model Y</td><td>2024-01-14 09:10:00</td><td><span class="badge approved">已通过</span></td><td><button class="btn btn-outline btn-xs" onclick="showVehicleDetail('吴司机','133****1111','京B88888','特斯拉 Model Y','2024款','SUV','2024-01-14 09:10:00')">查看详情</button></td></tr>
+                                <tr data-search="郑司机 1320000" data-status="已拒绝"><td>郑司机</td><td>132****0000</td><td>京A99999</td><td>蔚来 ES6</td><td>2024-01-13 14:30:00</td><td><span class="badge rejected">已拒绝</span></td><td><button class="btn btn-outline btn-xs" onclick="showVehicleDetail('郑司机','132****0000','京A99999','蔚来 ES6','2023款','SUV','2024-01-13 14:30:00')">查看详情</button></td></tr>
+                            </tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- ========== 活动管理 ========== -->
+                <div id="activity-manage" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">活动管理</div><button class="btn btn-primary" onclick="showCreateActivityModal()"><svg class="btn-icon" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 创建活动</button></div>
+                        <div class="tab-group" style="margin-bottom:20px;">
+                            <button class="btn btn-primary" onclick="switchActivityTab(this,'all')">全部</button>
+                            <button class="btn btn-outline" onclick="switchActivityTab(this,'not-started')">未开始</button>
+                            <button class="btn btn-outline" onclick="switchActivityTab(this,'in-progress')">进行中</button>
+                            <button class="btn btn-outline" onclick="switchActivityTab(this,'ended')">已结束</button>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;">
+                            <div class="highlight-card card" data-activity-tab="not-started">
+                                <div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-weight:600;font-size:15px;">五一劳动接单赛</div><div style="font-size:12px;color:#666;margin-top:4px;">2024-05-01 至 2024-05-07</div></div><span class="badge pending">未开始</span></div>
+                                <div class="reward-steps-list" style="margin:12px 0;">
+                                    <div class="reward-step-row"><span>满10单</span><span class="reward-step-amount">¥30</span></div>
+                                    <div class="reward-step-row"><span>满30单</span><span class="reward-step-amount">¥100</span></div>
+                                    <div class="reward-step-row"><span>满50单</span><span class="reward-step-amount">¥200</span></div>
+                                </div>
+                                <div style="display:flex;gap:10px;"><button class="btn btn-outline" style="flex:1;padding:8px;">编辑</button><button class="btn btn-secondary" style="flex:1;padding:8px;">删除</button></div>
+                            </div>
+                            <div class="highlight-card card" data-activity-tab="in-progress">
+                                <div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-weight:600;font-size:15px;">新春接单大挑战</div><div style="font-size:12px;color:#666;margin-top:4px;">2024-01-15 至 2024-02-15</div></div><span class="badge approved">进行中</span></div>
+                                <div class="reward-steps-list" style="margin:12px 0;">
+                                    <div class="reward-step-row"><span>满10单</span><span class="reward-step-amount">¥50</span></div>
+                                    <div class="reward-step-row"><span>满30单</span><span class="reward-step-amount">¥150</span></div>
+                                    <div class="reward-step-row"><span>满50单</span><span class="reward-step-amount">¥300</span></div>
+                                    <div class="reward-step-row"><span>满100单</span><span class="reward-step-amount">¥500</span></div>
+                                </div>
+                                <div style="display:flex;gap:10px;"><button class="btn btn-outline" style="flex:1;padding:8px;">编辑</button><button class="btn btn-secondary" style="flex:1;padding:8px;">删除</button></div>
+                            </div>
+                            <div class="highlight-card card" data-activity-tab="ended">
+                                <div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-weight:600;font-size:15px;">元旦迎新活动</div><div style="font-size:12px;color:#666;margin-top:4px;">2023-12-25 至 2024-01-03</div></div><span class="badge completed">已结束</span></div>
+                                <div class="reward-steps-list" style="margin:12px 0;">
+                                    <div class="reward-step-row"><span>满5单</span><span class="reward-step-amount">¥20</span></div>
+                                    <div class="reward-step-row"><span>满20单</span><span class="reward-step-amount">¥80</span></div>
+                                    <div class="reward-step-row"><span>满50单</span><span class="reward-step-amount">¥200</span></div>
+                                </div>
+                                <div style="display:flex;gap:10px;"><button class="btn btn-outline" style="flex:1;padding:8px;">查看</button><button class="btn btn-secondary" style="flex:1;padding:8px;">删除</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== 服务费配置 ========== -->
+                <div id="service-fee" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">平台服务费配置</div></div>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+                            <div class="form-group"><label>配送费抽成比例（%）</label><input type="number" class="form-control" value="15" step="0.1" min="0" max="100"><div style="font-size:12px;color:#999;margin-top:5px;">平台从每笔订单配送费中抽取的比例</div></div>
+                            <div class="form-group"><label>小费抽成比例（%）</label><input type="number" class="form-control" value="5" step="0.1" min="0" max="100"><div style="font-size:12px;color:#999;margin-top:5px;">平台从小费中抽取的比例</div></div>
+                            <div class="form-group"><label>保价费抽成比例（%）</label><input type="number" class="form-control" value="10" step="0.1" min="0" max="100"><div style="font-size:12px;color:#999;margin-top:5px;">平台从保价费中抽取的比例</div></div>
+                        </div>
+                        <div class="form-group"><label>说明</label><input type="text" class="form-control" value="平台按比例从配送费、小费、保价费中收取服务费用于运营"></div>
+                        <button class="btn btn-primary" onclick="alert('服务费配置已保存')">保存配置</button>
+                    </div>
+                </div>
+
+                <!-- ========== 提现配置 ========== -->
+                <div id="withdraw-config" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">提现配置</div></div>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+                            <div class="form-group"><label>每日提现次数</label><input type="number" class="form-control" value="3"></div>
+                            <div class="form-group"><label>最低提现金额(元)</label><input type="number" class="form-control" value="100"></div>
+                            <div class="form-group"><label>提现手续费(元)</label><input type="number" class="form-control" value="2"></div>
+                        </div>
+                        <button class="btn btn-primary">保存配置</button>
+                    </div>
+                </div>
+
+                <!-- ========== 地图配置 ========== -->
+                <div id="map-config" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">地图配置</div></div>
+                        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+                            <div class="form-group"><label>地图厂商</label><select class="form-control"><option>高德地图</option><option>百度地图</option><option>腾讯地图</option></select></div>
+                            <div class="form-group"><label>缩放级别</label><input type="number" class="form-control" value="12"></div>
+                        </div>
+                        <div class="form-group"><label>API Key</label><input type="text" class="form-control" placeholder="请输入地图服务 API Key"></div>
+                        <button class="btn btn-primary">保存配置</button>
+                    </div>
+                </div>
+
+                <!-- ========== 消息推送配置 ========== -->
+                <div id="push-config" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">APP消息推送配置</div></div>
+                        <div class="form-group"><label>新订单通知模板</label><textarea class="form-control" rows="2">您有新的配送订单，请及时接单！</textarea></div>
+                        <div class="form-group"><label>订单取消通知模板</label><textarea class="form-control" rows="2">订单已取消，感谢您的服务。</textarea></div>
+                        <div class="form-group"><label>提现成功通知模板</label><textarea class="form-control" rows="2">您的提现申请已处理，金额已到账。</textarea></div>
+                        <button class="btn btn-primary">保存配置</button>
+                    </div>
+                </div>
+
+                <!-- ========== 计价配置 ========== -->
+                <div id="pricing-config" class="page" style="display:none;">
+                    <!-- 起步价管理 -->
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">起步价管理</div></div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex:1;min-width:180px;">
+                                <label>起步价（元）</label>
+                                <input type="number" class="form-control" value="5.00" step="0.01" min="0" placeholder="请输入起步价" oninput="formatPriceInput(this)">
+                            </div>
+                            <div class="form-group" style="flex:1;min-width:180px;">
+                                <label>起步里程（公里）</label>
+                                <input type="number" class="form-control" value="3.00" step="0.01" min="0" placeholder="请输入起步里程" oninput="formatPriceInput(this)">
+                            </div>
+                        </div>
+                        <p class="form-hint">起步价：订单前N公里内的固定费用；超出起步里程后按阶梯里程计价</p>
+                    </div>
+
+                    <!-- 里程费阶梯配置 -->
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">里程费阶梯配置</div><button class="btn btn-primary btn-sm" onclick="addMileageTier()">+ 添加阶梯</button></div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr><th>起始里程（km）</th><th>结束里程（km）</th><th>价格（元/km）</th><th>操作</th></tr>
+                                </thead>
+                                <tbody id="mileage-tier-table">
+                                    <tr>
+                                        <td><input type="number" class="tier-input" value="0" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><input type="number" class="tier-input" value="3" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><input type="number" class="tier-input" value="1.80" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><button class="btn btn-danger btn-xs" onclick="removeMileageTier(this)" disabled>删除</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" class="tier-input" value="3" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><input type="number" class="tier-input" value="10" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><input type="number" class="tier-input" value="1.50" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><button class="btn btn-danger btn-xs" onclick="removeMileageTier(this)">删除</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" class="tier-input" value="10" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><input type="number" class="tier-input" value="50" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><input type="number" class="tier-input" value="1.20" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><button class="btn btn-danger btn-xs" onclick="removeMileageTier(this)">删除</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="number" class="tier-input" value="50" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><input type="number" class="tier-input" value="999" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><input type="number" class="tier-input" value="1.00" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                        <td><button class="btn btn-danger btn-xs" onclick="removeMileageTier(this)">删除</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="form-hint">超出起步里程部分，按实际里程落入的区间计算费用</p>
+                    </div>
+
+                    <!-- 重量/体积附加费 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">重量/体积附加费</div>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="weight-surcharge-toggle" checked onchange="toggleWeightSurcharge()">
+                                <label for="weight-surcharge-toggle" class="toggle-label"></label>
+                            </div>
+                        </div>
+                        <div id="weight-surcharge-content">
+                            <div class="form-row">
+                                <div class="form-group" style="flex:1;min-width:150px;">
+                                    <label>计费依据</label>
+                                    <select class="form-control">
+                                        <option value="weight" selected>按重量</option>
+                                        <option value="volume">按体积</option>
+                                        <option value="both">重量与体积取大值</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="table-wrapper" style="margin-top:10px;">
+                                <table>
+                                    <thead>
+                                        <tr><th>起始重量（kg）</th><th>结束重量（kg）</th><th>附加费（元）</th><th>起始体积（m³）</th><th>结束体积（m³）</th><th>操作</th></tr>
+                                    </thead>
+                                    <tbody id="weight-tier-table">
+                                        <tr>
+                                            <td><input type="number" class="tier-input" value="0" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="5" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="0.00" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="0" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="0.05" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><button class="btn btn-danger btn-xs" onclick="removeWeightTier(this)" disabled>删除</button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="number" class="tier-input" value="5" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="20" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="8.00" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="0.05" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="0.2" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><button class="btn btn-danger btn-xs" onclick="removeWeightTier(this)">删除</button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="number" class="tier-input" value="20" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="50" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="18.00" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="0.2" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><input type="number" class="tier-input" value="0.5" step="0.01" min="0" oninput="formatPriceInput(this)"></td>
+                                            <td><button class="btn btn-danger btn-xs" onclick="removeWeightTier(this)">删除</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="addWeightTier()">+ 添加阶梯</button>
+                        </div>
+                        <p class="form-hint">根据货物重量或体积阶梯收取附加费，可与里程费叠加计算</p>
+                    </div>
+
+                    <!-- 保价费配置 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">保价费配置</div>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="insurance-toggle" checked onchange="toggleInsurance()">
+                                <label for="insurance-toggle" class="toggle-label"></label>
+                            </div>
+                        </div>
+                        <div id="insurance-content">
+                            <div class="form-row">
+                                <div class="form-group" style="flex:1;min-width:180px;">
+                                    <label>费率（%）</label>
+                                    <input type="number" class="form-control" value="0.50" step="0.01" min="0" max="100" placeholder="请输入百分比" oninput="formatPriceInput(this)">
+                                </div>
+                                <div class="form-group" style="flex:1;min-width:180px;">
+                                    <label>最低保价费（元）</label>
+                                    <input type="number" class="form-control" value="3.00" step="0.01" min="0" placeholder="最低保价费" oninput="formatPriceInput(this)">
+                                </div>
+                                <div class="form-group" style="flex:1;min-width:180px;">
+                                    <label>最高保价费（元）</label>
+                                    <input type="number" class="form-control" value="50.00" step="0.01" min="0" placeholder="最高保价费" oninput="formatPriceInput(this)">
+                                </div>
+                            </div>
+                        </div>
+                        <p class="form-hint">保价费 = MAX(最低保价费, MIN(货品价值 × 费率%, 最高保价费))</p>
+                    </div>
+
+                    <!-- 计价计算示例 -->
+                    <div class="card" style="background:#F8FAFB;border:2px dashed #D0D5DD;">
+                        <div class="card-header" style="border-bottom:1px solid #D0D5DD;">
+                            <div class="card-title" style="display:flex;align-items:center;gap:8px;">🧮 计价计算示例</div>
+                            <span style="font-size:12px;color:#999;">以下为报给青云聚信询价的预估价格</span>
+                        </div>
+                        <div style="padding:15px;">
+                            <div style="background:white;border-radius:8px;padding:15px;margin-bottom:12px;">
+                                <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:#333;">示例场景：8公里配送，3.5kg货物，货品价值¥1000</div>
+                                <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px 16px;font-size:13px;">
+                                    <div style="color:#666;">起步价（3公里内）</div>
+                                    <div style="color:#999;">=</div>
+                                    <div style="font-weight:500;">¥5.00</div>
+
+                                    <div style="color:#666;">里程费 3-10公里（5km × ¥1.50/km）</div>
+                                    <div style="color:#999;">=</div>
+                                    <div style="font-weight:500;">¥7.50</div>
+
+                                    <div style="color:#666;">重量附加费 3.5kg（0-5kg档）</div>
+                                    <div style="color:#999;">=</div>
+                                    <div style="font-weight:500;">¥0.00</div>
+
+                                    <div style="color:#666;">保价费（¥1000 × 0.5%，最低¥3.00）</div>
+                                    <div style="color:#999;">=</div>
+                                    <div style="font-weight:500;">¥5.00</div>
+
+                                    <div style="border-top:1px solid #eee;padding-top:8px;color:#333;font-weight:600;">合计（青云聚信询价）</div>
+                                    <div style="border-top:1px solid #eee;padding-top:8px;color:#999;">=</div>
+                                    <div style="border-top:1px solid #eee;padding-top:8px;color:#FF6B35;font-weight:700;font-size:16px;">¥17.50</div>
+                                </div>
+                            </div>
+                            <div style="font-size:12px;color:#999;line-height:1.8;">
+                                <div>📌 <b>询价公式</b>：起步价 + 里程费 + 附加费 + 保价费 = 报给青云聚信询价的价格</div>
+                                <div>📌 实际结算价可能受活动优惠、折扣策略等因素影响，以最终结算为准</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary btn-lg" style="width:100%;margin-top:10px;">保存计价配置</button>
+                </div>
+
+                <!-- ========== 时效配置 ========== -->
+                <div id="eta-config" class="page" style="display:none;">
+                    <!-- 取货时间 -->
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">取货时间</div></div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex:1;min-width:200px;">
+                                <label>接单后到达取货点耗时（分钟）</label>
+                                <input type="number" class="form-control" id="pickup-time" value="15" step="1" min="1" placeholder="请输入分钟数" oninput="formatTimeInput(this)">
+                            </div>
+                        </div>
+                        <p class="form-hint">司机接单后，从当前位置驾车到达取货点的预估固定时间，单位为分钟，取整数</p>
+                    </div>
+
+                    <!-- 配送耗时 -->
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">配送耗时</div></div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex:1;min-width:250px;">
+                                <label>地图API来源</label>
+                                <select class="form-control" id="map-api-select">
+                                    <option value="amap" selected>高德地图</option>
+                                    <option value="baidu">百度地图</option>
+                                    <option value="tencent">腾讯地图</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="info-box" style="margin-top:12px;">
+                            <div style="font-size:13px;color:#666;">从取货点到收货点的驾车耗时，系统将调用地图API实时获取路径规划时间</div>
+                        </div>
+                    </div>
+
+                    <!-- 缓冲时间 -->
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">缓冲时间</div></div>
+                        <div class="form-row">
+                            <div class="form-group" style="flex:1;min-width:200px;">
+                                <label>计算方式</label>
+                                <select class="form-control" id="buffer-mode" onchange="toggleBufferMode()">
+                                    <option value="percent" selected>按配送耗时百分比</option>
+                                    <option value="fixed">固定时间</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="buffer-percent-group">
+                            <div class="form-group">
+                                <label>缓冲百分比（%）</label>
+                                <input type="number" class="form-control" id="buffer-percent" value="20" step="1" min="0" max="100" placeholder="请输入百分比">
+                            </div>
+                        </div>
+                        <div id="buffer-fixed-group" style="display:none;">
+                            <div class="form-group">
+                                <label>固定缓冲时间（分钟）</label>
+                                <input type="number" class="form-control" id="buffer-fixed" value="10" step="1" min="0" placeholder="请输入分钟数" oninput="formatTimeInput(this)">
+                            </div>
+                        </div>
+                        <p class="form-hint" id="buffer-hint">缓冲时间 = 配送耗时 × 20%，用于应对路况波动等不可控因素</p>
+                    </div>
+
+                    <!-- 预览示例 -->
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">时效计算示例</div></div>
+                        <div class="info-box">
+                            <div class="eta-formula">
+                                <div style="display:grid;grid-template-columns:120px 1fr;gap:8px 12px;font-size:14px;">
+                                    <span style="color:#666;">取货时间：</span><span style="color:#333;font-weight:500;">15分钟（固定）</span>
+                                    <span style="color:#666;">配送耗时：</span><span style="color:#333;font-weight:500;">25分钟（地图API）</span>
+                                    <span style="color:#666;">缓冲时间：</span><span style="color:#333;font-weight:500;">5分钟（20% × 25分钟 = 5分钟）</span>
+                                    <span style="border-top:1px solid #E8E8E8;grid-column:1/-1;margin:4px 0;"></span>
+                                    <span style="color:#333;font-weight:600;">预计送达耗时：</span><span style="color:#FF6B35;font-weight:600;font-size:16px;">45分钟</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="form-hint">最终时效 = 取货时间 + 配送耗时 + 缓冲时间，所有时间向上取整</p>
+                    </div>
+                    <button class="btn btn-primary btn-lg" style="width:100%;margin-top:10px;">保存时效配置</button>
+                </div>
+
+                <!-- ========== 管理员列表 ========== -->
+                <div id="admin-list" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">管理员列表</div><button class="btn btn-primary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 添加管理员</button></div>
+                        <div class="table-wrapper"><table>
+                            <thead><tr><th>用户名</th><th>姓名</th><th>手机号</th><th>角色</th><th>创建时间</th><th>操作</th></tr></thead>
+                            <tbody>
+                                <tr><td>admin</td><td>管理员</td><td>138****8888</td><td>超级管理员</td><td>2024-01-01</td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">编辑</button><button class="btn btn-danger" style="padding:4px 10px;font-size:12px;">删除</button></td></tr>
+                                <tr><td>finance</td><td>财务专员</td><td>139****6666</td><td>财务管理员</td><td>2024-01-10</td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">编辑</button><button class="btn btn-danger" style="padding:4px 10px;font-size:12px;">删除</button></td></tr>
+                            </tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- ========== 角色管理 ========== -->
+                <div id="role-manage" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">角色管理</div><button class="btn btn-primary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 创建角色</button></div>
+                        <div class="table-wrapper"><table>
+                            <thead><tr><th>角色名称</th><th>权限数量</th><th>创建时间</th><th>操作</th></tr></thead>
+                            <tbody>
+                                <tr><td>超级管理员</td><td>全部权限</td><td>2024-01-01</td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">编辑权限</button></td></tr>
+                                <tr><td>财务管理员</td><td>5</td><td>2024-01-10</td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">编辑权限</button></td></tr>
+                            </tbody>
+                        </table></div>
+                    </div>
+                </div>
+
+                <!-- ========== 菜单管理 ========== -->
+                <div id="menu-manage" class="page" style="display:none;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">菜单管理</div><button class="btn btn-primary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 添加菜单</button></div>
+                        <div class="table-wrapper"><table>
+                            <thead><tr><th>菜单名称</th><th>上级菜单</th><th>菜单路径</th><th>排序</th><th>状态</th><th>操作</th></tr></thead>
+                            <tbody>
+                                <tr><td>控制台</td><td>—</td><td>/dashboard</td><td>1</td><td><span class="badge approved">启用</span></td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">编辑</button></td></tr>
+                                <tr><td>用户管理</td><td>—</td><td>/users</td><td>2</td><td><span class="badge approved">启用</span></td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:12px;">编辑</button></td></tr>
+                            </tbody>
+                        </table></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 添加司机弹窗 -->
+    <div id="add-driver-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header"><div class="modal-title">添加司机</div><button class="modal-close" onclick="closeModal('add-driver-modal')">×</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label>姓名</label><input type="text" class="form-control" placeholder="请输入姓名"></div>
+                <div class="form-group"><label>手机号</label><input type="text" class="form-control" placeholder="请输入手机号"></div>
+                <div class="form-group"><label>身份证号</label><input type="text" class="form-control" placeholder="请输入身份证号"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('add-driver-modal')">取消</button><button class="btn btn-primary">确认添加</button></div>
+        </div>
+    </div>
+
+    <div id="order-detail-modal" class="modal-overlay">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header"><div class="modal-title">订单详情</div><button class="modal-close" onclick="closeModal('order-detail-modal')">×</button></div>
+            <div class="modal-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px;">
+                    <div><span style="color:#999;">订单来源：</span><span style="color:#333;font-weight:500;">美团青云聚信</span></div>
+                    <div><span style="color:#999;">订单编号：</span><span style="color:#333;font-weight:500;">DEL20240115001</span></div>
+                    <div><span style="color:#999;">订单类型：</span><span style="color:#333;font-weight:500;">即时配送</span></div>
+                    <div><span style="color:#999;">订单状态：</span><span class="badge delivering">配送中</span></div>
+                    <div><span style="color:#999;">下单时间：</span><span style="color:#333;">2024-01-15 10:30:00</span></div>
+                    <div><span style="color:#999;">送达时间：</span><span style="color:#FF6B35;font-weight:500;">预计30分钟内</span></div>
+                    <div style="grid-column:1/-1;border-top:1px solid #f0f0f0;padding-top:10px;"></div>
+                    <div><span style="color:#999;">收货人：</span><span style="color:#333;font-weight:500;">李小明</span></div>
+                    <div><span style="color:#999;">联系电话：</span><span style="color:#999;">138****5678</span></div>
+                    <div><span style="color:#999;">货品名称：</span><span style="color:#333;">电子产品</span></div>
+                    <div><span style="color:#999;">重量：</span><span style="color:#333;">3.5 kg</span></div>
+                    <div><span style="color:#999;">体积：</span><span style="color:#333;">0.03 m³</span></div>
+                    <div><span style="color:#999;">货品价值：</span><span style="color:#FF6B35;font-weight:500;">¥1,000.00</span></div>
+                    <div style="grid-column:1/-1;border-top:1px solid #f0f0f0;padding-top:10px;"></div>
+                    <div style="grid-column:1/-1;"><span style="color:#999;">取货地址：</span><span style="color:#333;font-weight:500;">北京市朝阳区</span><span style="color:#666;font-size:12px;"> 建国路88号SOHO现代城A座1层快递柜</span></div>
+                    <div style="grid-column:1/-1;"><span style="color:#999;">送达地址：</span><span style="color:#333;font-weight:500;">北京市海淀区</span><span style="color:#666;font-size:12px;"> 中关村大街1号海龙大厦1201</span></div>
+                    <div style="grid-column:1/-1;border-top:1px solid #f0f0f0;padding-top:10px;"></div>
+                    <div><span style="color:#999;">配送费：</span><span style="color:#333;font-weight:500;">¥35.00</span></div>
+                    <div><span style="color:#999;">保价费：</span><span style="color:#FF6B35;">¥5.00</span></div>
+                    <div><span style="color:#999;">配送距离：</span><span style="color:#333;">8.5km</span></div>
+                    <div><span style="color:#999;">合计：</span><span style="color:#FF6B35;font-weight:600;font-size:15px;">¥40.00</span></div>
+                    <div style="grid-column:1/-1;border-top:1px solid #f0f0f0;padding-top:10px;"></div>
+                    <div style="grid-column:1/-1;"><span style="color:#999;">订单备注：</span><span style="color:#666;">请轻拿轻放，物品为易碎品</span></div>
+                    <div style="grid-column:1/-1;"><span style="color:#999;">商户备注：</span><span style="color:#666;">请在取货时核对订单号，确认物品完整</span></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('order-detail-modal')">关闭</button></div>
+        </div>
+    </div>
+
+    <div id="create-activity-modal" class="modal-overlay">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header"><div class="modal-title">创建活动</div><button class="modal-close" onclick="closeModal('create-activity-modal')">×</button></div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>活动名称</label>
+                    <input type="text" class="form-control" placeholder="请输入活动名称">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                    <div class="form-group">
+                        <label>开始时间</label>
+                        <input type="date" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>结束时间</label>
+                        <input type="date" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>活动海报</label>
+                    <div style="border:2px dashed #ddd;border-radius:8px;padding:30px;text-align:center;color:#999;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='#FF6B35';this.style.color='#FF6B35'" onmouseout="this.style.borderColor='#ddd';this.style.color='#999'">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <div style="margin-top:8px;">点击上传海报图片</div>
+                        <div style="font-size:12px;">支持 JPG、PNG 格式，建议尺寸 750x300px</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>阶梯奖励配置</label>
+                    <div style="background:#FAFAFA;border-radius:8px;padding:15px;">
+                        <div id="reward-steps-container">
+                            <div class="reward-step-item" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+                                <span style="font-size:13px;color:#999;white-space:nowrap;">阶梯</span>
+                                <span style="font-size:13px;color:#999;white-space:nowrap;">满</span>
+                                <input type="number" class="form-control" placeholder="订单数" style="width:100px;padding:6px 10px;" value="10">
+                                <span style="font-size:13px;color:#999;white-space:nowrap;">单，奖励</span>
+                                <input type="number" class="form-control" placeholder="金额" style="width:100px;padding:6px 10px;" value="50">
+                                <span style="font-size:13px;color:#333;white-space:nowrap;">元</span>
+                                <button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;color:#E53935;" onclick="removeRewardStep(this)">×</button>
+                            </div>
+                            <div class="reward-step-item" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+                                <span style="font-size:13px;color:#999;white-space:nowrap;">阶梯</span>
+                                <span style="font-size:13px;color:#999;white-space:nowrap;">满</span>
+                                <input type="number" class="form-control" placeholder="订单数" style="width:100px;padding:6px 10px;" value="30">
+                                <span style="font-size:13px;color:#999;white-space:nowrap;">单，奖励</span>
+                                <input type="number" class="form-control" placeholder="金额" style="width:100px;padding:6px 10px;" value="150">
+                                <span style="font-size:13px;color:#333;white-space:nowrap;">元</span>
+                                <button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;color:#E53935;" onclick="removeRewardStep(this)">×</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline" style="width:100%;margin-top:8px;color:#FF6B35;border-color:#FF6B35;" onclick="addRewardStep()">+ 添加阶梯</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('create-activity-modal')">取消</button><button class="btn btn-primary">确认创建</button></div>
+        </div>
+    </div>
+
+    <div id="driver-detail-modal" class="modal-overlay">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header"><div class="modal-title">司机详情</div><button class="modal-close" onclick="closeModal('driver-detail-modal')">×</button></div>
+            <div class="modal-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px;">
+                    <div><span style="color:#999;">姓名：</span><span style="color:#333;font-weight:500;" id="dd-name">-</span></div>
+                    <div><span style="color:#999;">手机号：</span><span style="color:#333;font-weight:500;" id="dd-phone">-</span></div>
+                    <div><span style="color:#999;">真实姓名：</span><span style="color:#333;font-weight:500;" id="dd-realname">-</span></div>
+                    <div><span style="color:#999;">身份证号：</span><span style="color:#333;" id="dd-idcard">-</span></div>
+                    <div><span style="color:#999;">驾驶证号：</span><span style="color:#333;" id="dd-license">-</span></div>
+                    <div><span style="color:#999;">驾龄：</span><span style="color:#333;" id="dd-driveage">-</span></div>
+                    <div style="grid-column:1/-1;border-top:1px solid #f0f0f0;padding-top:10px;"></div>
+                    <div><span style="color:#999;">认证状态：</span><span class="badge approved" id="dd-certstatus">-</span></div>
+                    <div><span style="color:#999;">认证时间：</span><span style="color:#333;" id="dd-certtime">-</span></div>
+                    <div style="grid-column:1/-1;border-top:1px solid #f0f0f0;padding-top:10px;"></div>
+                    <div><span style="color:#999;">车牌号：</span><span style="color:#333;font-weight:500;" id="dd-plate">-</span></div>
+                    <div><span style="color:#999;">车辆品牌：</span><span style="color:#333;" id="dd-brand">-</span></div>
+                    <div><span style="color:#999;">车型年款：</span><span style="color:#333;" id="dd-modelyear">-</span></div>
+                    <div><span style="color:#999;">车辆绑定状态：</span><span class="badge approved" id="dd-vehiclestatus">-</span></div>
+                    <div style="grid-column:1/-1;border-top:1px solid #f0f0f0;padding-top:10px;"></div>
+                    <div><span style="color:#999;">注册时间：</span><span style="color:#333;" id="dd-regtime">-</span></div>
+                    <div><span style="color:#999;">最近活跃：</span><span style="color:#333;" id="dd-lastactive">-</span></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('driver-detail-modal')">关闭</button></div>
+        </div>
+    </div>
+
+    <div id="driver-edit-modal" class="modal-overlay">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header"><div class="modal-title">编辑司机信息</div><button class="modal-close" onclick="closeModal('driver-edit-modal')">×</button></div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>姓名</label><input type="text" class="form-control" id="edit-name" placeholder="请输入姓名"></div>
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>手机号</label><input type="text" class="form-control" id="edit-phone" placeholder="请输入手机号"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>真实姓名</label><input type="text" class="form-control" id="edit-realname" placeholder="请输入真实姓名"></div>
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>身份证号</label><input type="text" class="form-control" id="edit-idcard" placeholder="请输入身份证号"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>驾驶证号</label><input type="text" class="form-control" id="edit-license" placeholder="请输入驾驶证号"></div>
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>车牌号</label><input type="text" class="form-control" id="edit-plate" placeholder="请输入车牌号"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>车辆品牌</label><input type="text" class="form-control" id="edit-brand" placeholder="请输入车辆品牌"></div>
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>车型年款</label><input type="text" class="form-control" id="edit-modelyear" placeholder="请输入车型年款"></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('driver-edit-modal')">取消</button><button class="btn btn-primary" onclick="saveDriverEdit()">保存修改</button></div>
+        </div>
+    </div>
+
+    <div id="certify-driver-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header"><div class="modal-title">司机认证</div><button class="modal-close" onclick="closeModal('certify-driver-modal')">×</button></div>
+            <div class="modal-body">
+                <div style="text-align:center;margin-bottom:20px;">
+                    <div style="font-size:14px;color:#666;">正在为以下司机进行后台认证</div>
+                    <div style="font-size:18px;font-weight:600;margin-top:8px;" id="certify-driver-name">-</div>
+                    <div style="color:#999;font-size:13px;" id="certify-driver-phone">-</div>
+                </div>
+                <div class="form-group"><label>认证类型</label>
+                    <select class="form-control" id="certify-type">
+                        <option value="identity">身份认证</option>
+                        <option value="license">驾驶证认证</option>
+                        <option value="all">全部认证</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>审核状态</label>
+                    <select class="form-control" id="certify-status">
+                        <option value="approved">通过</option>
+                        <option value="rejected">驳回</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>审核备注</label><textarea class="form-control" id="certify-remark" rows="3" placeholder="请输入审核备注（选填）"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('certify-driver-modal')">取消</button><button class="btn btn-primary" onclick="submitCertify()">确认提交</button></div>
+        </div>
+    </div>
+
+    <div id="bind-vehicle-modal" class="modal-overlay">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header"><div class="modal-title">车辆绑定</div><button class="modal-close" onclick="closeModal('bind-vehicle-modal')">×</button></div>
+            <div class="modal-body">
+                <div style="text-align:center;margin-bottom:20px;">
+                    <div style="font-size:14px;color:#666;">正在为以下司机绑定车辆</div>
+                    <div style="font-size:18px;font-weight:600;margin-top:8px;" id="bind-driver-name">-</div>
+                    <div style="color:#999;font-size:13px;" id="bind-driver-phone">-</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>车牌号</label><input type="text" class="form-control" id="bind-plate" placeholder="请输入车牌号"></div>
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>车辆品牌</label><input type="text" class="form-control" id="bind-brand" placeholder="请输入车辆品牌"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>车型年款</label><input type="text" class="form-control" id="bind-modelyear" placeholder="请输入车型年款"></div>
+                    <div class="form-group" style="flex:1;min-width:200px;"><label>车辆类型</label><select class="form-control" id="bind-vehicletype"><option>电动自行车</option><option>摩托车</option><option>面包车</option><option>小型货车</option><option>轿车</option></select></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('bind-vehicle-modal')">取消</button><button class="btn btn-primary" onclick="submitVehicleBind()">确认绑定</button></div>
+        </div>
+    </div>
+
+    <div id="withdraw-detail-modal" class="modal-overlay">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header"><div class="modal-title">提现详情审核</div><button class="modal-close" onclick="closeModal('withdraw-detail-modal')">×</button></div>
+            <div class="modal-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px;">
+                    <div><span style="color:#999;">提现单号：</span><span style="color:#333;font-weight:500;" id="wd-num">-</span></div>
+                    <div><span style="color:#999;">申请时间：</span><span style="color:#333;" id="wd-time">-</span></div>
+                    <div><span style="color:#999;">司机姓名：</span><span style="color:#333;font-weight:500;" id="wd-name">-</span></div>
+                    <div><span style="color:#999;">手机号：</span><span style="color:#333;" id="wd-phone">-</span></div>
+                    <div><span style="color:#999;">提现金额：</span><span style="color:#FF6B35;font-weight:600;font-size:15px;" id="wd-amount">-</span></div>
+                    <div><span style="color:#999;">提现方式：</span><span style="color:#333;" id="wd-method">-</span></div>
+                    <div style="grid-column:1/-1;border-top:1px solid #f0f0f0;padding-top:10px;"></div>
+                    <div><span style="color:#999;">开户银行：</span><span style="color:#333;font-weight:500;" id="wd-bank">-</span></div>
+                    <div><span style="color:#999;">银行卡号：</span><span style="color:#333;" id="wd-cardnum">-</span></div>
+                    <div><span style="color:#999;">账户名：</span><span style="color:#333;" id="wd-accname">-</span></div>
+                    <div><span style="color:#999;">开户行地址：</span><span style="color:#333;" id="wd-bankaddr">-</span></div>
+                    <div style="grid-column:1/-1;border-top:1px solid #f0f0f0;padding-top:10px;"></div>
+                    <div><span style="color:#999;">可提现余额：</span><span style="color:#333;" id="wd-balance">-</span></div>
+                    <div><span style="color:#999;">当前状态：</span><span class="badge pending" id="wd-status">待审核</span></div>
+                </div>
+                <div id="wd-reject-section" style="display:none;margin-top:15px;">
+                    <div class="form-group"><label style="color:#FF4D4F;">拒绝理由 <span style="color:#FF4D4F;">*</span></label>
+                        <textarea class="form-control" id="wd-reject-reason" rows="3" placeholder="请输入拒绝理由"></textarea>
+                    </div>
+                </div>
+                <div id="wd-approve-section" style="margin-top:15px;">
+                    <div class="info-box" style="background:#E8F5E9;border:1px solid #A5D6A7;">
+                        <div style="font-size:13px;color:#2E7D32;">确认通过后，提现金额将在1-3个工作日内到达司机银行账户。</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('withdraw-detail-modal')">关闭</button>
+                <button class="btn btn-danger" id="wd-reject-btn" onclick="showRejectSection()">拒绝</button>
+                <button class="btn btn-success" id="wd-approve-btn" onclick="approveWithdraw()">通过审核</button>
+                <button class="btn btn-danger" id="wd-confirm-reject-btn" style="display:none;" onclick="confirmReject()">确认拒绝</button>
+                <button class="btn btn-secondary" id="wd-cancel-reject-btn" style="display:none;" onclick="hideRejectSection()">取消拒绝</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cancel-detail-modal" class="modal-overlay">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header"><div class="modal-title">取消订单审核</div><button class="modal-close" onclick="closeModal('cancel-detail-modal')">×</button></div>
+            <div class="modal-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px;">
+                    <div><span style="color:#999;">订单号：</span><span style="color:#333;font-weight:500;">DEL20240115005</span></div>
+                    <div><span style="color:#999;">申请时间：</span><span style="color:#333;">2024-01-15 15:30:00</span></div>
+                    <div><span style="color:#999;">司机姓名：</span><span style="color:#333;font-weight:500;">张司机</span></div>
+                    <div><span style="color:#999;">手机号：</span><span style="color:#333;">138****8888</span></div>
+                    <div><span style="color:#999;">配送费：</span><span style="color:#FF6B35;font-weight:600;">¥35.00</span></div>
+                    <div><span style="color:#999;">当前状态：</span><span class="badge pending">待审核</span></div>
+                </div>
+                <div style="border-top:1px solid #f0f0f0;margin-top:15px;padding-top:15px;">
+                    <div class="form-group">
+                        <label style="color:#333;font-weight:500;">取消原因</label>
+                        <div style="padding:12px;background:#FFF8E1;border:1px solid #FFE0B2;border-radius:8px;font-size:13px;color:#5D4037;">
+                            客户电话无法接通，多次尝试联系未果，无法完成配送。
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label style="color:#333;font-weight:500;">上传图片</label>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                            <div class="uploaded-image" style="width:120px;height:120px;border-radius:8px;overflow:hidden;border:1px solid #eee;background:#f8f9fa;">
+                                <img src="https://neeko-copilot.bytedance.net/api/text_to_image?prompt=phone%20call%20failed%20screen%20shot%20delivery%20driver&image_size=square" style="width:100%;height:100%;object-fit:cover;" />
+                            </div>
+                            <div class="uploaded-image" style="width:120px;height:120px;border-radius:8px;overflow:hidden;border:1px solid #eee;background:#f8f9fa;">
+                                <img src="https://neeko-copilot.bytedance.net/api/text_to_image?prompt=delivery%20address%20location%20photo&image_size=square" style="width:100%;height:100%;object-fit:cover;" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('cancel-detail-modal')">关闭</button>
+                <button class="btn btn-danger" onclick="rejectCancel()">拒绝申请</button>
+                <button class="btn btn-success" onclick="approveCancel()">通过审核</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cert-detail-modal" class="modal-overlay">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header"><div class="modal-title">认证详情</div><button class="modal-close" onclick="closeModal('cert-detail-modal')">×</button></div>
+            <div class="modal-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px;">
+                    <div><span style="color:#999;">司机姓名：</span><span style="color:#333;font-weight:500;" id="cd-name">-</span></div>
+                    <div><span style="color:#999;">手机号：</span><span style="color:#333;" id="cd-phone">-</span></div>
+                    <div><span style="color:#999;">身份证号：</span><span style="color:#333;" id="cd-idcard">-</span></div>
+                    <div><span style="color:#999;">驾驶证号：</span><span style="color:#333;" id="cd-license">-</span></div>
+                    <div><span style="color:#999;">申请时间：</span><span style="color:#333;" id="cd-time">-</span></div>
+                    <div><span style="color:#999;">审核状态：</span><span class="badge pending" id="cd-status">待审核</span></div>
+                    <div style="grid-column:1/-1;border-top:1px solid #f0f0f0;padding-top:10px;"></div>
+                    <div style="grid-column:1/-1;"><span style="color:#999;">身份证正面：</span></div>
+                    <div style="grid-column:1/-1;"><div style="width:100%;height:180px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#999;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="margin-left:8px;">身份证正面照片</span></div></div>
+                    <div style="grid-column:1/-1;margin-top:10px;"><span style="color:#999;">身份证反面：</span></div>
+                    <div style="grid-column:1/-1;"><div style="width:100%;height:180px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#999;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="margin-left:8px;">身份证反面照片</span></div></div>
+                    <div style="grid-column:1/-1;margin-top:10px;"><span style="color:#999;">驾驶证照片：</span></div>
+                    <div style="grid-column:1/-1;"><div style="width:100%;height:180px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#999;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="margin-left:8px;">驾驶证照片</span></div></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('cert-detail-modal')">关闭</button>
+                <button class="btn btn-danger">驳回</button>
+                <button class="btn btn-success">通过认证</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="vehicle-detail-modal" class="modal-overlay">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header"><div class="modal-title">车辆绑定详情</div><button class="modal-close" onclick="closeModal('vehicle-detail-modal')">×</button></div>
+            <div class="modal-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px;">
+                    <div><span style="color:#999;">司机姓名：</span><span style="color:#333;font-weight:500;" id="vd-name">-</span></div>
+                    <div><span style="color:#999;">手机号：</span><span style="color:#333;" id="vd-phone">-</span></div>
+                    <div><span style="color:#999;">车牌号：</span><span style="color:#333;font-weight:500;" id="vd-plate">-</span></div>
+                    <div><span style="color:#999;">车辆品牌：</span><span style="color:#333;" id="vd-brand">-</span></div>
+                    <div><span style="color:#999;">车型年款：</span><span style="color:#333;" id="vd-modelyear">-</span></div>
+                    <div><span style="color:#999;">车辆类型：</span><span style="color:#333;" id="vd-vehicletype">-</span></div>
+                    <div><span style="color:#999;">申请时间：</span><span style="color:#333;" id="vd-time">-</span></div>
+                    <div><span style="color:#999;">审核状态：</span><span class="badge pending" id="vd-status">待审核</span></div>
+                    <div style="grid-column:1/-1;border-top:1px solid #f0f0f0;padding-top:10px;"></div>
+                    <div style="grid-column:1/-1;"><span style="color:#999;">行驶证照片：</span></div>
+                    <div style="grid-column:1/-1;"><div style="width:100%;height:180px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#999;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="margin-left:8px;">行驶证照片</span></div></div>
+                    <div style="grid-column:1/-1;margin-top:10px;"><span style="color:#999;">车辆照片：</span></div>
+                    <div style="grid-column:1/-1;"><div style="width:100%;height:180px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#999;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="margin-left:8px;">车辆照片</span></div></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('vehicle-detail-modal')">关闭</button>
+                <button class="btn btn-danger">驳回</button>
+                <button class="btn btn-success">通过绑定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var pageTitles = {
+            'dashboard': '控制台', 'driver-list': '司机列表', 'withdraw-audit': '提现审核',
+            'withdraw-history': '提现记录', 'income-detail': '平台收入', 'order-list': '订单列表', 'cancel-review': '取消审核', 'driver-dispatch': '司机调度',
+            'driver-cert': '司机认证', 'vehicle-bind': '车辆绑定', 'activity-manage': '活动管理',
+            'service-fee': '服务费配置', 'withdraw-config': '提现配置',
+            'map-config': '地图配置', 'push-config': '消息推送配置', 'admin-list': '管理员列表',
+            'role-manage': '角色管理', 'menu-manage': '菜单管理',
+            'pricing-config': '计价配置', 'eta-config': '时效配置'
+        };
+
+        function showPage(pageId, el, event) {
+            if (event) { event.stopPropagation(); }
+
+            document.querySelectorAll('.page').forEach(function(page) {
+                page.style.display = 'none';
+            });
+            document.getElementById(pageId).style.display = 'block';
+
+            document.querySelectorAll('.sidebar-menu a').forEach(function(a) {
+                a.classList.remove('active');
+            });
+            if (el) { el.classList.add('active'); }
+
+            document.getElementById('page-title').textContent = pageTitles[pageId] || pageId;
+        }
+
+        function toggleSubmenu(parentLink, event) {
+            event.stopPropagation();
+            var li = parentLink.parentElement;
+            li.classList.toggle('open');
+            var submenu = li.querySelector('.submenu');
+            submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function showAddDriverModal() {
+            document.getElementById('add-driver-modal').classList.add('show');
+        }
+
+        function showOrderDetail() {
+            document.getElementById('order-detail-modal').classList.add('show');
+        }
+
+        function showCreateActivityModal() {
+            document.getElementById('create-activity-modal').classList.add('show');
+        }
+
+        function switchActivityTab(btn, tab) {
+            var tabGroup = btn.parentElement;
+            var allBtns = tabGroup.querySelectorAll('button');
+            allBtns.forEach(function(b) { b.className = 'btn btn-outline'; });
+            btn.className = 'btn btn-primary';
+
+            var cards = document.querySelectorAll('[data-activity-tab]');
+            cards.forEach(function(card) {
+                if (tab === 'all' || card.getAttribute('data-activity-tab') === tab) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function addRewardStep() {
+            var container = document.getElementById('reward-steps-container');
+            var div = document.createElement('div');
+            div.className = 'reward-step-item';
+            div.style.cssText = 'display:flex;gap:10px;align-items:center;margin-bottom:10px;';
+            div.innerHTML = '<span style="font-size:13px;color:#999;white-space:nowrap;">阶梯</span>' +
+                '<span style="font-size:13px;color:#999;white-space:nowrap;">满</span>' +
+                '<input type="number" class="form-control" placeholder="订单数" style="width:100px;padding:6px 10px;">' +
+                '<span style="font-size:13px;color:#999;white-space:nowrap;">单，奖励</span>' +
+                '<input type="number" class="form-control" placeholder="金额" style="width:100px;padding:6px 10px;">' +
+                '<span style="font-size:13px;color:#333;white-space:nowrap;">元</span>' +
+                '<button class="btn btn-secondary" style="padding:4px 8px;font-size:12px;color:#E53935;" onclick="removeRewardStep(this)">×</button>';
+            container.appendChild(div);
+        }
+
+        function removeRewardStep(btn) {
+            var steps = document.querySelectorAll('#reward-steps-container .reward-step-item');
+            if (steps.length <= 1) {
+                alert('至少保留一个阶梯配置');
+                return;
+            }
+            btn.parentElement.remove();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        function formatPriceInput(el) {
+            var val = parseFloat(el.value);
+            if (!isNaN(val)) {
+                el.value = val.toFixed(2);
+            }
+        }
+
+        function formatTimeInput(el) {
+            var val = parseFloat(el.value);
+            if (!isNaN(val)) {
+                el.value = Math.ceil(val);
+            }
+        }
+
+        function addMileageTier() {
+            var tbody = document.getElementById('mileage-tier-table');
+            var rows = tbody.querySelectorAll('tr');
+            var lastRow = rows[rows.length - 1];
+            var lastEnd = parseFloat(lastRow.querySelectorAll('input')[1].value) || 0;
+            var newEnd = lastEnd + 50;
+            var newPrice = (1.00 + Math.random() * 0.5).toFixed(2);
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td><input type="number" class="tier-input" value="' + lastEnd + '" step="0.01" min="0" oninput="formatPriceInput(this)"></td>' +
+                '<td><input type="number" class="tier-input" value="' + newEnd + '" step="0.01" min="0" oninput="formatPriceInput(this)"></td>' +
+                '<td><input type="number" class="tier-input" value="' + newPrice + '" step="0.01" min="0" oninput="formatPriceInput(this)"></td>' +
+                '<td><button class="btn btn-danger btn-xs" onclick="removeMileageTier(this)">删除</button></td>';
+            tbody.appendChild(tr);
+            updateMileageDeleteButtons();
+        }
+
+        function removeMileageTier(btn) {
+            var tbody = document.getElementById('mileage-tier-table');
+            if (tbody.querySelectorAll('tr').length <= 1) return;
+            btn.closest('tr').remove();
+            updateMileageDeleteButtons();
+        }
+
+        function updateMileageDeleteButtons() {
+            var tbody = document.getElementById('mileage-tier-table');
+            var rows = tbody.querySelectorAll('tr');
+            rows.forEach(function(row, index) {
+                var btn = row.querySelector('.btn-danger');
+                if (rows.length <= 1) {
+                    btn.setAttribute('disabled', '');
+                } else {
+                    btn.removeAttribute('disabled');
+                }
+            });
+        }
+
+        function addWeightTier() {
+            var tbody = document.getElementById('weight-tier-table');
+            var rows = tbody.querySelectorAll('tr');
+            var lastRow = rows[rows.length - 1];
+            var inputs = lastRow.querySelectorAll('input');
+            var lastWeightEnd = parseFloat(inputs[1].value) || 0;
+            var lastVolEnd = parseFloat(inputs[4].value) || 0;
+            var newWeightEnd = lastWeightEnd + 30;
+            var newVolEnd = (lastVolEnd + 0.3).toFixed(2);
+            var newFee = (lastWeightEnd * 0.4).toFixed(2);
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td><input type="number" class="tier-input" value="' + lastWeightEnd + '" step="0.01" min="0" oninput="formatPriceInput(this)"></td>' +
+                '<td><input type="number" class="tier-input" value="' + newWeightEnd + '" step="0.01" min="0" oninput="formatPriceInput(this)"></td>' +
+                '<td><input type="number" class="tier-input" value="' + newFee + '" step="0.01" min="0" oninput="formatPriceInput(this)"></td>' +
+                '<td><input type="number" class="tier-input" value="' + lastVolEnd + '" step="0.01" min="0" oninput="formatPriceInput(this)"></td>' +
+                '<td><input type="number" class="tier-input" value="' + newVolEnd + '" step="0.01" min="0" oninput="formatPriceInput(this)"></td>' +
+                '<td><button class="btn btn-danger btn-xs" onclick="removeWeightTier(this)">删除</button></td>';
+            tbody.appendChild(tr);
+            updateWeightDeleteButtons();
+        }
+
+        function removeWeightTier(btn) {
+            var tbody = document.getElementById('weight-tier-table');
+            if (tbody.querySelectorAll('tr').length <= 1) return;
+            btn.closest('tr').remove();
+            updateWeightDeleteButtons();
+        }
+
+        function updateWeightDeleteButtons() {
+            var tbody = document.getElementById('weight-tier-table');
+            var rows = tbody.querySelectorAll('tr');
+            rows.forEach(function(row, index) {
+                var btn = row.querySelector('.btn-danger');
+                if (rows.length <= 1) {
+                    btn.setAttribute('disabled', '');
+                } else {
+                    btn.removeAttribute('disabled');
+                }
+            });
+        }
+
+        function toggleWeightSurcharge() {
+            var checked = document.getElementById('weight-surcharge-toggle').checked;
+            document.getElementById('weight-surcharge-content').style.display = checked ? 'block' : 'none';
+        }
+
+        function toggleInsurance() {
+            var checked = document.getElementById('insurance-toggle').checked;
+            document.getElementById('insurance-content').style.display = checked ? 'block' : 'none';
+        }
+
+        function toggleBufferMode() {
+            var mode = document.getElementById('buffer-mode').value;
+            var percentGroup = document.getElementById('buffer-percent-group');
+            var fixedGroup = document.getElementById('buffer-fixed-group');
+            var hint = document.getElementById('buffer-hint');
+            if (mode === 'percent') {
+                percentGroup.style.display = 'block';
+                fixedGroup.style.display = 'none';
+                hint.textContent = '缓冲时间 = 配送耗时 × 百分比，用于应对路况波动等不可控因素';
+            } else {
+                percentGroup.style.display = 'none';
+                fixedGroup.style.display = 'block';
+                hint.textContent = '缓冲时间 = 固定值（分钟），用于应对路况波动等不可控因素';
+            }
+        }
+
+        function showDriverDetail(name, phone, realname, idcard, license, driveage, certstatus, plate, brand, modelyear, vehiclestatus, regtime, lastactive) {
+            document.getElementById('dd-name').textContent = name || '-';
+            document.getElementById('dd-phone').textContent = phone || '-';
+            document.getElementById('dd-realname').textContent = realname || '-';
+            document.getElementById('dd-idcard').textContent = idcard || '-';
+            document.getElementById('dd-license').textContent = license || '-';
+            document.getElementById('dd-driveage').textContent = driveage || '-';
+            var certBadge = document.getElementById('dd-certstatus');
+            certBadge.textContent = certstatus || '-';
+            certBadge.className = 'badge ' + (certstatus === '已认证' ? 'approved' : certstatus === '待审核' ? 'pending' : 'rejected');
+            document.getElementById('dd-certtime').textContent = lastactive || '-';
+            document.getElementById('dd-plate').textContent = plate || '-';
+            document.getElementById('dd-brand').textContent = brand || '-';
+            document.getElementById('dd-modelyear').textContent = modelyear || '-';
+            var vehBadge = document.getElementById('dd-vehiclestatus');
+            vehBadge.textContent = vehiclestatus || '-';
+            vehBadge.className = 'badge ' + (vehiclestatus === '已绑定' ? 'approved' : vehiclestatus === '待绑定' ? 'pending' : 'rejected');
+            document.getElementById('dd-regtime').textContent = regtime || '-';
+            document.getElementById('dd-lastactive').textContent = lastactive || '-';
+            document.getElementById('driver-detail-modal').classList.add('show');
+        }
+
+        function showDriverEdit(name, phone, realname, idcard, license, plate, brand, modelyear) {
+            document.getElementById('edit-name').value = name || '';
+            document.getElementById('edit-phone').value = phone || '';
+            document.getElementById('edit-realname').value = realname || '';
+            document.getElementById('edit-idcard').value = idcard || '';
+            document.getElementById('edit-license').value = license || '';
+            document.getElementById('edit-plate').value = plate || '';
+            document.getElementById('edit-brand').value = brand || '';
+            document.getElementById('edit-modelyear').value = modelyear || '';
+            document.getElementById('driver-edit-modal').classList.add('show');
+        }
+
+        function saveDriverEdit() {
+            alert('司机信息已保存');
+            closeModal('driver-edit-modal');
+        }
+
+        function showCertifyDriver(name, phone) {
+            document.getElementById('certify-driver-name').textContent = name;
+            document.getElementById('certify-driver-phone').textContent = phone;
+            document.getElementById('certify-driver-modal').classList.add('show');
+        }
+
+        function submitCertify() {
+            var status = document.getElementById('certify-status').value;
+            if (status === 'approved') {
+                alert('司机认证已通过');
+            } else {
+                alert('司机认证已驳回');
+            }
+            closeModal('certify-driver-modal');
+        }
+
+        function showBindVehicle(name, phone) {
+            document.getElementById('bind-driver-name').textContent = name;
+            document.getElementById('bind-driver-phone').textContent = phone;
+            document.getElementById('bind-vehicle-modal').classList.add('show');
+        }
+
+        function submitVehicleBind() {
+            var plate = document.getElementById('bind-plate').value;
+            if (!plate) { alert('请输入车牌号'); return; }
+            alert('车辆绑定成功：' + plate);
+            closeModal('bind-vehicle-modal');
+        }
+
+        function showWithdrawDetail(num, time, name, phone, amount, method, bank, cardnum, accname, bankaddr, balance) {
+            document.getElementById('wd-num').textContent = num;
+            document.getElementById('wd-time').textContent = time;
+            document.getElementById('wd-name').textContent = name;
+            document.getElementById('wd-phone').textContent = phone;
+            document.getElementById('wd-amount').textContent = amount;
+            document.getElementById('wd-method').textContent = method;
+            document.getElementById('wd-bank').textContent = bank;
+            document.getElementById('wd-cardnum').textContent = cardnum;
+            document.getElementById('wd-accname').textContent = accname;
+            document.getElementById('wd-bankaddr').textContent = bankaddr;
+            document.getElementById('wd-balance').textContent = balance;
+            hideRejectSection();
+            document.getElementById('withdraw-detail-modal').classList.add('show');
+        }
+
+        function showRejectSection() {
+            document.getElementById('wd-reject-section').style.display = 'block';
+            document.getElementById('wd-approve-section').style.display = 'none';
+            document.getElementById('wd-reject-btn').style.display = 'none';
+            document.getElementById('wd-approve-btn').style.display = 'none';
+            document.getElementById('wd-confirm-reject-btn').style.display = 'inline-flex';
+            document.getElementById('wd-cancel-reject-btn').style.display = 'inline-flex';
+        }
+
+        function hideRejectSection() {
+            document.getElementById('wd-reject-section').style.display = 'none';
+            document.getElementById('wd-approve-section').style.display = 'block';
+            document.getElementById('wd-reject-btn').style.display = 'inline-flex';
+            document.getElementById('wd-approve-btn').style.display = 'inline-flex';
+            document.getElementById('wd-confirm-reject-btn').style.display = 'none';
+            document.getElementById('wd-cancel-reject-btn').style.display = 'none';
+            document.getElementById('wd-reject-reason').value = '';
+        }
+
+        function approveWithdraw() {
+            alert('提现申请已通过，金额将在1-3个工作日内到账');
+            closeModal('withdraw-detail-modal');
+        }
+
+        function confirmReject() {
+            var reason = document.getElementById('wd-reject-reason').value;
+            if (!reason.trim()) { alert('请输入拒绝理由'); return; }
+            alert('提现申请已拒绝，理由：' + reason);
+            closeModal('withdraw-detail-modal');
+        }
+
+        function showCertDetail(name, phone, idcard, license, time) {
+            document.getElementById('cd-name').textContent = name;
+            document.getElementById('cd-phone').textContent = phone;
+            document.getElementById('cd-idcard').textContent = idcard;
+            document.getElementById('cd-license').textContent = license;
+            document.getElementById('cd-time').textContent = time;
+            document.getElementById('cert-detail-modal').classList.add('show');
+        }
+
+        function showVehicleDetail(name, phone, plate, brand, modelyear, vehicletype, time) {
+            document.getElementById('vd-name').textContent = name;
+            document.getElementById('vd-phone').textContent = phone;
+            document.getElementById('vd-plate').textContent = plate;
+            document.getElementById('vd-brand').textContent = brand;
+            document.getElementById('vd-modelyear').textContent = modelyear;
+            document.getElementById('vd-vehicletype').textContent = vehicletype;
+            document.getElementById('vd-time').textContent = time;
+            document.getElementById('vehicle-detail-modal').classList.add('show');
+        }
+
+        function filterCertTable(keyword) {
+            var rows = document.querySelectorAll('#cert-table tbody tr');
+            rows.forEach(function(row) {
+                var searchData = (row.getAttribute('data-search') || '').toLowerCase();
+                var keywordLower = keyword.toLowerCase();
+                if (!keywordLower || searchData.indexOf(keywordLower) > -1) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function filterCertStatus(status) {
+            var rows = document.querySelectorAll('#cert-table tbody tr');
+            rows.forEach(function(row) {
+                var rowStatus = row.getAttribute('data-status');
+                if (status === 'all' || rowStatus === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function filterVehicleTable(keyword) {
+            var rows = document.querySelectorAll('#vehicle-table tbody tr');
+            rows.forEach(function(row) {
+                var searchData = (row.getAttribute('data-search') || '').toLowerCase();
+                var keywordLower = keyword.toLowerCase();
+                if (!keywordLower || searchData.indexOf(keywordLower) > -1) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function filterVehicleStatus(status) {
+            var rows = document.querySelectorAll('#vehicle-table tbody tr');
+            rows.forEach(function(row) {
+                var rowStatus = row.getAttribute('data-status');
+                if (status === 'all' || rowStatus === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function filterIncomeOrders(keyword) {
+            applyIncomeFilters();
+        }
+
+        function filterIncomeType(type) {
+            applyIncomeFilters();
+        }
+
+        function filterIncomeDate(date) {
+            applyIncomeFilters();
+        }
+
+        function applyIncomeFilters() {
+            var rows = document.querySelectorAll('#income-table tbody tr');
+            var keywordInput = document.querySelector('#income-detail [placeholder="搜索订单号"]');
+            var typeInput = document.querySelector('#income-detail select[onchange*="filterIncomeType"]');
+            var dateInput = document.querySelector('#income-detail select[onchange*="filterIncomeDate"]');
+            var keyword = keywordInput ? keywordInput.value.toLowerCase() : '';
+            var type = typeInput ? typeInput.value : 'all';
+            var date = dateInput ? dateInput.value : 'all';
+            rows.forEach(function(row) {
+                var searchData = (row.getAttribute('data-search') || '').toLowerCase();
+                var rowType = row.getAttribute('data-type');
+                var rowDate = row.getAttribute('data-date');
+                var show = true;
+                if (keyword && searchData.indexOf(keyword) === -1) show = false;
+                if (type !== 'all' && rowType !== type) show = false;
+                if (date !== 'all' && rowDate !== date) show = false;
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        function exportIncome() {
+            alert('平台收入明细导出中，文件将自动下载...');
+        }
+
+        function switchIncomeDate(date, el) {
+            document.querySelectorAll('.date-tab').forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            el.classList.add('active');
+            var statValues = {
+                'today': { total: '¥8,520.00', service: '¥5,320.00', tip: '¥1,200.00', insurance: '¥2,000.00' },
+                'week': { total: '¥58,640.00', service: '¥36,420.00', tip: '¥8,400.00', insurance: '¥13,820.00' },
+                'month': { total: '¥248,560.00', service: '¥152,380.00', tip: '¥35,620.00', insurance: '¥60,560.00' }
+            };
+            var values = statValues[date];
+            document.querySelector('.stats-grid .stat-card.main .stat-value').textContent = values.total;
+            document.querySelector('.stats-grid .stat-card.blue .stat-value').textContent = values.service;
+            document.querySelector('.stats-grid .stat-card.orange .stat-value').textContent = values.tip;
+            document.querySelector('.stats-grid .stat-card.purple .stat-value').textContent = values.insurance;
+        }
+
+        var withdrawAuditKeyword = '';
+        var withdrawAuditStatus = 'all';
+
+        function filterWithdrawAudit(keyword) {
+            withdrawAuditKeyword = keyword.toLowerCase();
+            applyWithdrawAuditFilters();
+        }
+
+        function filterWithdrawAuditStatus(status) {
+            withdrawAuditStatus = status;
+            applyWithdrawAuditFilters();
+        }
+
+        function applyWithdrawAuditFilters() {
+            var rows = document.querySelectorAll('#withdraw-audit-table tbody tr');
+            rows.forEach(function(row) {
+                var searchData = (row.getAttribute('data-search') || '').toLowerCase();
+                var rowStatus = row.getAttribute('data-status');
+                var show = true;
+                if (withdrawAuditKeyword && !searchData.includes(withdrawAuditKeyword)) {
+                    show = false;
+                }
+                if (withdrawAuditStatus !== 'all' && rowStatus !== withdrawAuditStatus) {
+                    show = false;
+                }
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        var withdrawHistoryKeyword = '';
+        var withdrawHistoryStatus = 'all';
+
+        function filterWithdrawHistory(keyword) {
+            withdrawHistoryKeyword = keyword.toLowerCase();
+            applyWithdrawHistoryFilters();
+        }
+
+        function filterWithdrawHistoryStatus(status) {
+            withdrawHistoryStatus = status;
+            applyWithdrawHistoryFilters();
+        }
+
+        function applyWithdrawHistoryFilters() {
+            var rows = document.querySelectorAll('#withdraw-history-table tbody tr');
+            rows.forEach(function(row) {
+                var searchData = (row.getAttribute('data-search') || '').toLowerCase();
+                var rowStatus = row.getAttribute('data-status');
+                var show = true;
+                if (withdrawHistoryKeyword && !searchData.includes(withdrawHistoryKeyword)) {
+                    show = false;
+                }
+                if (withdrawHistoryStatus !== 'all' && rowStatus !== withdrawHistoryStatus) {
+                    show = false;
+                }
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        var orderKeyword = '';
+        var orderStatus = 'all';
+        var orderType = 'all';
+        var deliveryStatus = 'all';
+
+        function filterOrderKeyword(keyword) {
+            orderKeyword = keyword.toLowerCase();
+            applyOrderFilters();
+        }
+
+        function filterOrderStatus(status) {
+            orderStatus = status;
+            document.querySelectorAll('.tab-group .btn').forEach(function(btn) {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline');
+            });
+            event.target.classList.remove('btn-outline');
+            event.target.classList.add('btn-primary');
+            applyOrderFilters();
+        }
+
+        function filterOrderType(type) {
+            orderType = type;
+            applyOrderFilters();
+        }
+
+        function filterDeliveryStatus(status) {
+            deliveryStatus = status;
+            applyOrderFilters();
+        }
+
+        function applyOrderFilters() {
+            var rows = document.querySelectorAll('#order-list-table tbody tr');
+            rows.forEach(function(row) {
+                var searchData = (row.getAttribute('data-status') + ' ' + row.getAttribute('data-type') + ' ' + row.textContent).toLowerCase();
+                var rowStatus = row.getAttribute('data-status');
+                var rowType = row.getAttribute('data-type');
+                var rowDelivery = row.getAttribute('data-delivery');
+                var show = true;
+                if (orderKeyword && !searchData.includes(orderKeyword)) {
+                    show = false;
+                }
+                if (orderStatus !== 'all' && rowStatus !== orderStatus) {
+                    show = false;
+                }
+                if (orderType !== 'all' && rowType !== orderType) {
+                    show = false;
+                }
+                if (deliveryStatus !== 'all') {
+                    if (deliveryStatus === 'normal' && rowDelivery !== 'normal') show = false;
+                    if (deliveryStatus === 'abnormal' && rowDelivery !== 'abnormal') show = false;
+                    if (deliveryStatus === 'timeout' && rowDelivery !== 'timeout') show = false;
+                }
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        var cancelReviewKeyword = '';
+        var cancelReviewStatus = 'all';
+
+        function filterCancelReview(keyword) {
+            cancelReviewKeyword = keyword.toLowerCase();
+            applyCancelReviewFilters();
+        }
+
+        function filterCancelReviewStatus(status) {
+            cancelReviewStatus = status;
+            applyCancelReviewFilters();
+        }
+
+        function applyCancelReviewFilters() {
+            var rows = document.querySelectorAll('#cancel-review-table tbody tr');
+            rows.forEach(function(row) {
+                var searchData = (row.getAttribute('data-search') || '').toLowerCase();
+                var rowStatus = row.getAttribute('data-status');
+                var show = true;
+                if (cancelReviewKeyword && !searchData.includes(cancelReviewKeyword)) {
+                    show = false;
+                }
+                if (cancelReviewStatus !== 'all' && rowStatus !== cancelReviewStatus) {
+                    show = false;
+                }
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        function showCancelDetail(orderNo) {
+            var cancelDetailModal = document.getElementById('cancel-detail-modal');
+            cancelDetailModal.classList.add('show');
+        }
+
+        function approveCancel() {
+            alert('取消申请已通过，订单将被取消。');
+            closeModal('cancel-detail-modal');
+        }
+
+        function rejectCancel() {
+            alert('取消申请已拒绝，司机需继续完成配送。');
+            closeModal('cancel-detail-modal');
+        }
+    </script>
+</body>
+</html>
