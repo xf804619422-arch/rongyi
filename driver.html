@@ -38,6 +38,113 @@
             opacity: 0.9;
             margin-top: 5px;
         }
+        .notify-bell {
+            position: absolute;
+            top: 18px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .notify-bell:hover {
+            background: rgba(255,255,255,0.35);
+        }
+        .notify-bell .bell-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 10px;
+            height: 10px;
+            background: #FF4D4F;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: none;
+        }
+        .notify-bell .bell-dot.show {
+            display: block;
+        }
+        .msg-tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 4px;
+            margin: 15px;
+        }
+        .msg-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: #999;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .msg-tab.active {
+            background: white;
+            color: #FF6B35;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .msg-item {
+            padding: 15px;
+            margin: 8px 15px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            gap: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .msg-item:active {
+            transform: scale(0.98);
+        }
+        .msg-item.unread {
+            background: #FFF8F0;
+        }
+        .msg-item .msg-dot {
+            width: 8px;
+            height: 8px;
+            background: #FF4D4F;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 6px;
+            display: none;
+        }
+        .msg-item.unread .msg-dot {
+            display: block;
+        }
+        .msg-icon-wrap {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .msg-icon-wrap.order-cancel {
+            background: #FFF0F0;
+        }
+        .msg-icon-wrap.order-review {
+            background: #FFF8F0;
+        }
+        .msg-icon-wrap.order-change {
+            background: #E3F2FD;
+        }
+        .msg-icon-wrap.order-tip {
+            background: #FFF5F0;
+        }
+        .msg-icon-wrap.withdraw-review {
+            background: #E8F5E9;
+        }
         .btn {
             display: block;
             width: 90%;
@@ -1353,6 +1460,13 @@
 
     <div id="home-page" class="page">
         <div class="header">
+            <div class="notify-bell" onclick="showNotifications()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <span class="bell-dot show" id="bell-dot"></span>
+            </div>
             <div class="header-title">融宜出行快送</div>
             <div class="header-subtitle">司机端</div>
         </div>
@@ -1722,6 +1836,17 @@
             <div class="detail-title">订单详情</div>
         </div>
         <div class="detail-content">
+            <div id="order-cancelled-banner" style="display:none;background:linear-gradient(135deg,#FFF0F0,#FFE8E8);border:1px solid #FFCDD2;border-radius:12px;padding:12px 15px;margin-bottom:15px;display:none;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:32px;height:32px;background:#FF4D4F;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </div>
+                    <div>
+                        <div style="font-size:16px;font-weight:600;color:#FF4D4F;">订单已取消</div>
+                        <div style="font-size:12px;color:#999;margin-top:2px;">该订单已被取消，无需配送</div>
+                    </div>
+                </div>
+            </div>
             <div class="detail-section">
                 <div class="detail-subtitle">订单信息</div>
                 <div class="detail-row">
@@ -1815,7 +1940,7 @@
                     <span class="detail-value" style="color: #FF6B35;">8.5km</span>
                 </div>
             </div>
-            <button class="btn btn-primary btn-block" onclick="acceptOrderFromDetail()">确认接单</button>
+            <button class="btn btn-primary btn-block" id="btn-accept-order" onclick="acceptOrderFromDetail()">确认接单</button>
         </div>
     </div>
 
@@ -2363,39 +2488,22 @@
             <span class="detail-back" onclick="goBack()">‹</span>
             <div class="detail-title">消息通知</div>
         </div>
-        <div class="scroll-container" style="padding-top: 20px;">
-            <div class="section">
-                <div class="order-card" style="border: none; box-shadow: none;">
-                    <div style="display: flex; gap: 12px;">
-                        <div style="width: 40px; height: 40px; background: #FFF5F0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #FF6B35;">📢</div>
-                        <div style="flex: 1;">
-                            <div style="font-size: 15px; font-weight: 500; color: #333; margin-bottom: 5px;">系统通知</div>
-                            <div style="font-size: 13px; color: #666; line-height: 1.4;">您有新的订单，请及时查看并接单</div>
-                            <div style="font-size: 12px; color: #999; margin-top: 5px;">10分钟前</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="order-card" style="border: none; box-shadow: none;">
-                    <div style="display: flex; gap: 12px;">
-                        <div style="width: 40px; height: 40px; background: #E8F5E9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #2E7D32;">💰</div>
-                        <div style="flex: 1;">
-                            <div style="font-size: 15px; font-weight: 500; color: #333; margin-bottom: 5px;">收入到账</div>
-                            <div style="font-size: 13px; color: #666; line-height: 1.4;">订单 HIS001 配送费 ¥45.00 已到账</div>
-                            <div style="font-size: 12px; color: #999; margin-top: 5px;">30分钟前</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="order-card" style="border: none; box-shadow: none;">
-                    <div style="display: flex; gap: 12px;">
-                        <div style="width: 40px; height: 40px; background: #E3F2FD; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #1976D2;">💬</div>
-                        <div style="flex: 1;">
-                            <div style="font-size: 15px; font-weight: 500; color: #333; margin-bottom: 5px;">用户感谢</div>
-                            <div style="font-size: 13px; color: #666; line-height: 1.4;">订单 HIS001 用户给予好评并打赏 ¥10.00</div>
-                            <div style="font-size: 12px; color: #999; margin-top: 5px;">35分钟前</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="msg-tabs">
+            <div class="msg-tab active" onclick="switchMsgTab('order', this)">订单提醒</div>
+            <div class="msg-tab" onclick="switchMsgTab('withdraw', this)">提现通知</div>
+        </div>
+        <div class="scroll-container" style="padding-bottom: 20px;">
+            <div id="msg-order-list"></div>
+            <div id="msg-withdraw-list" style="display:none;"></div>
+        </div>
+    </div>
+
+    <div id="msg-detail-page" class="page">
+        <div class="detail-header">
+            <span class="detail-back" onclick="goBackFromMsgDetail()">‹</span>
+            <div class="detail-title" id="msg-detail-title">消息详情</div>
+        </div>
+        <div class="detail-content" id="msg-detail-content" style="padding:0 15px;">
         </div>
     </div>
 
@@ -2976,8 +3084,17 @@
             navigateTo('delivery-page');
         }
 
-        function viewOrderDetail(orderId) {
+        function viewOrderDetail(orderId, isCancelled) {
             document.getElementById('detail-order-id').textContent = orderId;
+            var banner = document.getElementById('order-cancelled-banner');
+            var btn = document.getElementById('btn-accept-order');
+            if (isCancelled) {
+                banner.style.display = 'block';
+                btn.style.display = 'none';
+            } else {
+                banner.style.display = 'none';
+                btn.style.display = 'block';
+            }
             navigateTo('order-detail-page');
         }
 
@@ -3046,7 +3163,111 @@
         }
 
         function showNotifications() {
+            renderMsgList('order');
             navigateTo('notifications-page');
+        }
+
+        function switchMsgTab(type, el) {
+            document.querySelectorAll('.msg-tab').forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            el.classList.add('active');
+            document.getElementById('msg-order-list').style.display = type === 'order' ? 'block' : 'none';
+            document.getElementById('msg-withdraw-list').style.display = type === 'withdraw' ? 'block' : 'none';
+            renderMsgList(type);
+        }
+
+        var msgData = {
+            order: [
+                { id: 1, title: '订单已取消', desc: '订单 DEL20240115005 已取消，取货地址：朝阳区建国路88号SOHO现代城A座', time: '5分钟前', unread: true, orderId: 'ORD001', iconCls: 'order-cancel', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4D4F" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>' },
+                { id: 2, title: '取消审核通过', desc: '订单 DEL20240115005 取消审核已通过，该订单已取消', time: '30分钟前', unread: true, orderId: 'ORD001', iconCls: 'order-review', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#07C160" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' },
+                { id: 3, title: '取消审核未通过', desc: '订单 DEL20240115006 取消审核未通过，请继续完成该订单配送', time: '1小时前', unread: false, orderId: 'ORD002', iconCls: 'order-review', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4D4F" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>' },
+                { id: 4, title: '订单信息变更', desc: '订单 DEL20240115001 送达地址已更新为：海淀区中关村大街1号创新大厦B座12层', time: '2小时前', unread: true, orderId: 'ORD001', iconCls: 'order-change', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1976D2" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>' },
+                { id: 5, title: '订单信息变更', desc: '订单 DEL20240115002 预约时间已调整为 15:00，请按时配送', time: '3小时前', unread: false, orderId: 'ORD001', iconCls: 'order-change', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1976D2" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>' },
+                { id: 8, title: '订单小费变更', desc: '订单 DEL20240115001 用户追加小费 ¥15.00，当前小费 ¥25.00', time: '45分钟前', unread: true, orderId: 'ORD001', iconCls: 'order-tip', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' }
+            ],
+            withdraw: [
+                { id: 6, title: '提现审核通过', desc: '您的提现申请（单号：WD20240115001）已审核通过，金额 ¥1,000.00 将在1-3个工作日内到账', time: '1小时前', unread: true, orderId: null, iconCls: 'withdraw-review', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#07C160" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>', amount: '¥1,000.00', withdrawId: 'WD20240115001', cardInfo: '中国工商银行 ****3288', status: '已通过' },
+                { id: 7, title: '提现审核未通过', desc: '您的提现申请（单号：WD20240115003）审核未通过，原因：银行卡信息不符，请重新绑定银行卡后再次申请', time: '昨天', unread: true, orderId: null, iconCls: 'withdraw-review', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4D4F" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>', amount: '¥500.00', withdrawId: 'WD20240115003', cardInfo: '中国建设银行 ****6632', status: '未通过' }
+            ]
+        };
+
+        function renderMsgList(type) {
+            var list = msgData[type];
+            var containerId = type === 'order' ? 'msg-order-list' : 'msg-withdraw-list';
+            var container = document.getElementById(containerId);
+            var html = '';
+            list.forEach(function(msg) {
+                html += '<div class="msg-item' + (msg.unread ? ' unread' : '') + '" onclick="openMsg(' + msg.id + ', \'' + type + '\')">';
+                html += '<div class="msg-dot"></div>';
+                html += '<div class="msg-icon-wrap ' + msg.iconCls + '">' + msg.icon + '</div>';
+                html += '<div style="flex:1;">';
+                html += '<div style="font-size:15px;font-weight:500;color:#333;margin-bottom:4px;">' + msg.title + '</div>';
+                html += '<div style="font-size:13px;color:#666;line-height:1.4;">' + msg.desc + '</div>';
+                html += '<div style="font-size:12px;color:#999;margin-top:6px;">' + msg.time + '</div>';
+                html += '</div></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        var currentMsgType = 'order';
+
+        function openMsg(msgId, type) {
+            currentMsgType = type;
+            var msg = null;
+            var allMsgs = msgData.order.concat(msgData.withdraw);
+            for (var i = 0; i < allMsgs.length; i++) {
+                if (allMsgs[i].id === msgId) { msg = allMsgs[i]; break; }
+            }
+            if (!msg) return;
+            msg.unread = false;
+            updateBellDot();
+            if (type === 'order') {
+                if (msg.title === '订单信息变更' || msg.title === '取消审核未通过' || msg.title === '订单小费变更') {
+                    viewDeliveryDetail(msg.orderId);
+                } else if (msg.title === '订单已取消' || msg.title === '取消审核通过') {
+                    viewOrderDetail(msg.orderId, true);
+                } else {
+                    viewOrderDetail(msg.orderId, false);
+                }
+            } else {
+                showMsgDetail(msg);
+            }
+        }
+
+        function showMsgDetail(msg) {
+            document.getElementById('msg-detail-title').textContent = '消息详情';
+            var html = '';
+            html += '<div class="detail-section"><div class="detail-subtitle">' + msg.title + '</div></div>';
+            html += '<div class="detail-section">';
+            html += '<div class="detail-row"><span class="detail-label">提现单号</span><span class="detail-value">' + msg.withdrawId + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">提现金额</span><span class="detail-value" style="color:#FF6B35;font-weight:600;">' + msg.amount + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">银行卡</span><span class="detail-value">' + msg.cardInfo + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">审核结果</span><span class="detail-value" style="color:' + (msg.status === '已通过' ? '#07C160' : '#FF4D4F') + ';font-weight:500;">' + msg.status + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">通知时间</span><span class="detail-value">' + msg.time + '</span></div>';
+            html += '</div>';
+            html += '<div class="detail-section"><div class="detail-subtitle">详情说明</div>';
+            html += '<div style="padding:12px;background:#FFF8F0;border-radius:8px;font-size:13px;color:#5D4037;line-height:1.6;">' + msg.desc + '</div>';
+            html += '</div>';
+            document.getElementById('msg-detail-content').innerHTML = html;
+            navigateTo('msg-detail-page');
+        }
+
+        function goBackFromMsgDetail() {
+            renderMsgList(currentMsgType);
+            navigateTo('notifications-page');
+        }
+
+        function updateBellDot() {
+            var hasUnread = false;
+            var allMsgs = msgData.order.concat(msgData.withdraw);
+            for (var i = 0; i < allMsgs.length; i++) {
+                if (allMsgs[i].unread) { hasUnread = true; break; }
+            }
+            var dot = document.getElementById('bell-dot');
+            if (dot) {
+                if (hasUnread) { dot.classList.add('show'); } else { dot.classList.remove('show'); }
+            }
         }
 
         function showActivityDetail() {
